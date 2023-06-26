@@ -6,6 +6,7 @@
     "python.analysis.typeCheckingMode": "basic",
     "cSpell.words": [
         "dotenv",
-        "jsonify"
+        "jsonify",
+        "psycopg"
     ]
 }
