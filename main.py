@@ -16,6 +16,7 @@ my_timezone = timezone("Africa/Nairobi")
 
 account_sid = os.getenv("ACCOUNT_SID")
 auth_token = os.getenv("AUTH_TOKEN")
+web_app = os.getenv("WEB_APP")
 
 client = Client(account_sid, auth_token)
 
@@ -45,7 +46,7 @@ def daily_update():
 
     summary = []
 
-    date_obj = my_timezone.localize(datetime.strptime("2023-05-28", "%Y-%m-%d"))
+    date_obj = my_timezone.localize(datetime.today())
 
     try:
         conn = db_connect()
@@ -68,25 +69,9 @@ def daily_update():
             conn.close()
 
     if records:
-        for record in records:
-            new_record = {
-                "name": record[1],
-                "morning_production": record[2],
-                "afternoon_production": record[3],
-                "evening_production": record[4],
-                "total_production": (record[2] + record[3] + record[4]),
-            }
-
-            formatted_records.append(new_record)
-
-        for record in formatted_records:
-            info = f"{record['name']} \n\nMorning: {record['morning_production']} \nAfternoon: {record['afternoon_production']} \nEvening: {record['evening_production']} \nTotal production: {record['total_production']} \n"
-
-            summary.append(info)
-
         message = client.messages.create(
             from_="+14846420725",
-            body=f"{list(record for record in summary)}",
+            body=f"Check webapp for updates on records for date '{date_obj.date()}'. \nLink: {web_app}/{date_obj.date()}",
             to="+254725131828",
         )
 
@@ -95,7 +80,7 @@ def daily_update():
     else:
         message = client.messages.create(
             from_="+14846420725",
-            body=f"No records were found for date '{date_obj}'.",
+            body=f"No records were found for date '{date_obj.date()}'.",
             to="+254725131828",
         )
 
@@ -333,7 +318,7 @@ def create_app():
                 }
             )
 
-    schedule.every(10).seconds.do(daily_update)
+    schedule.every().day.at("19:00", "Africa/Nairobi").do(daily_update)
 
     def run_scheduled_tasks():
         while True:
