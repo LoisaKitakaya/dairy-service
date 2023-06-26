@@ -1,13 +1,23 @@
 import os
+import time
+import logging
 import psycopg2
+import schedule
 from pytz import timezone
+from threading import Thread
 from datetime import datetime
+from twilio.rest import Client
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 
 load_dotenv()
 
 my_timezone = timezone("Africa/Nairobi")
+
+account_sid = os.getenv("ACCOUNT_SID")
+auth_token = os.getenv("AUTH_TOKEN")
+
+client = Client(account_sid, auth_token)
 
 
 def make_timestamp(date_sr: str):
@@ -33,7 +43,9 @@ def daily_update():
 
     formatted_records = []
 
-    date_obj = my_timezone.localize(datetime.today())
+    summary = []
+
+    date_obj = my_timezone.localize(datetime.strptime("2023-05-28", "%Y-%m-%d"))
 
     try:
         conn = db_connect()
@@ -67,8 +79,29 @@ def daily_update():
 
             formatted_records.append(new_record)
 
+        for record in formatted_records:
+            info = f"{record['name']} \n\nMorning: {record['morning_production']} \nAfternoon: {record['afternoon_production']} \nEvening: {record['evening_production']} \nTotal production: {record['total_production']} \n"
+
+            summary.append(info)
+
+        message = client.messages.create(
+            from_="+14846420725",
+            body=f"{list(record for record in summary)}",
+            to="+254725131828",
+        )
+
+        logging.info(message.sid)
+
     else:
-        pass
+        message = client.messages.create(
+            from_="+14846420725",
+            body=f"No records were found for date '{date_obj}'.",
+            to="+254725131828",
+        )
+
+        logging.info(message.sid)
+
+    return
 
 
 def create_app():
@@ -299,6 +332,16 @@ def create_app():
                     "message": f"0 records from date '{date}' found in table 'milk_production'."
                 }
             )
+
+    schedule.every(10).seconds.do(daily_update)
+
+    def run_scheduled_tasks():
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    schedule_thread = Thread(target=run_scheduled_tasks, daemon=True)
+    schedule_thread.start()
 
     return app
 
