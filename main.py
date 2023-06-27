@@ -119,7 +119,7 @@ def check_connection():
             conn.close()
 
     if db_version:
-        return jsonify({"data": {"message": f"Connection successful: {db_version}"}})
+        return jsonify({"data": {"message": f"Connection successful."}})
     else:
         return jsonify({"data": {"message": "Connection failed."}})
 
