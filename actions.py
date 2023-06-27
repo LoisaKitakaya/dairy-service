@@ -1,8 +1,14 @@
-from main import db_connect, my_timezone
+import click
+from main import db_connect
 from datetime import datetime
-from pytz import timezone
 
 
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
 def create_tables():
     conn = None
 
@@ -30,6 +36,8 @@ def create_tables():
 
         cur.close()
 
+        click.echo("Tables created successfully.")
+
     except Exception as error:
         raise Exception(str(error))
 
@@ -40,6 +48,7 @@ def create_tables():
     return
 
 
+@click.command()
 def delete_tables():
     conn = None
 
@@ -54,50 +63,7 @@ def delete_tables():
 
         cur.close()
 
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return
-
-
-date_obj = my_timezone.localize(datetime.strptime("2023-6-27", "%Y-%m-%d"))
-
-SAMPLE_DATA = {
-    "name": "Cow",
-    "morning_production": 5.6,
-    "afternoon_production": 4.7,
-    "evening_production": 6.1,
-    "production_unit": "Litres",
-    "production_date": date_obj,
-}
-
-
-def create_record(
-    animal: str = SAMPLE_DATA["name"],
-    morning_production: float = SAMPLE_DATA["morning_production"],
-    afternoon_production: float = SAMPLE_DATA["afternoon_production"],
-    evening_production: float = SAMPLE_DATA["evening_production"],
-    production_unit: str = SAMPLE_DATA["production_unit"],
-    production_date: datetime = SAMPLE_DATA["production_date"],
-):
-    conn = None
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute(
-            f"INSERT INTO milk_production(animal, morning_production, afternoon_production, evening_production, production_unit, production_date) VALUES('{animal}', {morning_production}, { afternoon_production}, {evening_production}, '{production_unit}', '{production_date.date()}')"
-        )
-
-        conn.commit()
-
-        cur.close()
+        click.echo("Tables deleted successfully.")
 
     except Exception as error:
         raise Exception(str(error))
@@ -109,25 +75,9 @@ def create_record(
     return
 
 
-def delete_record(table: str = "milk_production", id: int = 1):
-    conn = None
+cli.add_command(create_tables)
+cli.add_command(delete_tables)
 
-    try:
-        conn = db_connect()
 
-        cur = conn.cursor()
-
-        cur.execute(f"DELETE from {table} WHERE id = {id};")
-
-        conn.commit()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return
+if __name__ == "__main__":
+    cli()
