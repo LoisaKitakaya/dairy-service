@@ -22,12 +22,6 @@ receiver_one = os.getenv("TWILIO_RECEIVER_ONE")
 web_app = os.getenv("WEB_APP")
 
 
-def make_timestamp(date_sr: str):
-    date_obj = my_timezone.localize(datetime.strptime(date_sr, "%Y-%m-%d"))
-
-    return date_obj.timestamp()
-
-
 def db_connect():
     return psycopg2.connect(
         database=os.getenv("DATABASE_NAME"),
@@ -86,6 +80,12 @@ def daily_update():
             )
 
     return
+
+
+def make_timestamp(date_sr: str):
+    date_obj = my_timezone.localize(datetime.strptime(date_sr, "%Y-%m-%d"))
+
+    return date_obj.timestamp()
 
 
 app = Flask(__name__)
