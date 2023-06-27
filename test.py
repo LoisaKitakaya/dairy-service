@@ -1,6 +1,6 @@
 import pytest
+from db import *
 from main import app as flask_app
-from actions import *
 
 
 @pytest.fixture()
@@ -36,10 +36,7 @@ def test_check_connection(client):
 
     assert res.status_code == 200
 
-    assert (
-        res.json["data"]["message"]
-        == "Connection successful: ('PostgreSQL 14.7 (Ubuntu 14.7-0ubuntu0.22.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0, 64-bit',)"
-    )
+    assert res.json["data"]["message"] == "Connection successful."
 
 
 def test_view_all_records(client):
@@ -60,4 +57,46 @@ def test_view_all_records(client):
         assert record["production_unit"] == "Litres"
         assert record["production_date"] == 1687813200.0
 
-def test_
+
+def test_view_record(client):
+    query = "Cow"
+
+    res = client.get(f"/view_record/{query}/")
+
+    assert res.status_code == 200
+
+    assert (
+        res.json["data"]["message"]
+        == f"1 record(s) of '{query}' found in table 'milk_production'."
+    )
+
+    for record in res.json["data"]["records"]:
+        assert record["id"] == 1
+        assert record["name"] == "Cow"
+        assert record["morning_production"] == 5.6
+        assert record["afternoon_production"] == 4.7
+        assert record["evening_production"] == 6.1
+        assert record["production_unit"] == "Litres"
+        assert record["production_date"] == 1687813200.0
+
+
+def test_view_record_by_date(client):
+    query = "2023-06-27"
+
+    res = client.get(f"/view_record_by_date/{query}/")
+
+    assert res.status_code == 200
+
+    assert (
+        res.json["data"]["message"]
+        == f"1 record(s) from date '{query}' found in table 'milk_production'."
+    )
+
+    for record in res.json["data"]["records"]:
+        assert record["id"] == 1
+        assert record["name"] == "Cow"
+        assert record["morning_production"] == 5.6
+        assert record["afternoon_production"] == 4.7
+        assert record["evening_production"] == 6.1
+        assert record["production_unit"] == "Litres"
+        assert record["production_date"] == 1687813200.0
