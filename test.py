@@ -1,5 +1,5 @@
 import pytest
-from db import *
+from db.db import *
 from main import app as flask_app
 
 
