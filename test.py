@@ -1,6 +1,6 @@
 import pytest
 from db.db import *
-from main import app as flask_app
+from main import app as flask_app, daily_update
 
 
 @pytest.fixture()
@@ -100,3 +100,11 @@ def test_view_record_by_date(client):
         assert record["evening_production"] == 6.1
         assert record["production_unit"] == "Litres"
         assert record["production_date"] == 1687813200.0
+
+
+def test_daily_update():
+    create_tables()
+
+    res = daily_update(testing=True)
+
+    assert res == True
