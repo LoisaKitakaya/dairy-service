@@ -1,10 +1,10 @@
 import os
 import time
-import logging
 import psycopg2
 import schedule
+import threading
 from pytz import timezone
-from threading import Thread
+from flask_cors import CORS
 from datetime import datetime
 from twilio.rest import Client
 from dotenv import load_dotenv
@@ -14,15 +14,16 @@ load_dotenv()
 
 my_timezone = timezone("Africa/Nairobi")
 
-account_sid = os.getenv("ACCOUNT_SID")
-auth_token = os.getenv("AUTH_TOKEN")
-web_app = os.getenv("WEB_APP")
+account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+sender = os.getenv("TWILIO_SENDER")
+receiver_one = os.getenv("TWILIO_RECEIVER_ONE")
 
-client = Client(account_sid, auth_token)
+web_app = os.getenv("WEB_APP")
 
 
 def make_timestamp(date_sr: str):
-    date_obj = datetime.strptime(date_sr, "%Y-%m-%d")
+    date_obj = my_timezone.localize(datetime.strptime(date_sr, "%Y-%m-%d"))
 
     return date_obj.timestamp()
 
@@ -42,9 +43,7 @@ def daily_update():
 
     records = None
 
-    formatted_records = []
-
-    summary = []
+    recipients = [receiver_one]
 
     date_obj = my_timezone.localize(datetime.today())
 
@@ -68,272 +67,286 @@ def daily_update():
         if conn is not None:
             conn.close()
 
-    if records:
-        message = client.messages.create(
-            from_="+14846420725",
-            body=f"Check webapp for updates on records for date '{date_obj.date()}'. \nLink: {web_app}/{date_obj.date()}",
-            to="+254725131828",
-        )
+        client = Client(account_sid, auth_token)
 
-        logging.info(message.sid)
+    if records:
+        for recipient in recipients:
+            client.messages.create(
+                from_=sender,
+                body=f"Check webapp for updates on records for date '{date_obj.date()}'. \nLink: {web_app}/date/{date_obj.date()}",
+                to=recipient,  # type: ignore
+            )
 
     else:
-        message = client.messages.create(
-            from_="+14846420725",
-            body=f"No records were found for date '{date_obj.date()}'.",
-            to="+254725131828",
-        )
-
-        logging.info(message.sid)
+        for recipient in recipients:
+            client.messages.create(
+                from_=sender,
+                body=f"No records were found for date '{date_obj.date()}'.",
+                to=recipient,  # type: ignore
+            )
 
     return
 
 
-def create_app():
-    app = Flask(__name__)
+app = Flask(__name__)
 
-    @app.route("/check_connection/")
-    def check_connection():
-        conn = None
 
-        db_version = None
+CORS(app, resources={r"/*": {"origins": f"{web_app}"}})
 
-        try:
-            conn = db_connect()
 
-            cur = conn.cursor()
+@app.route("/check_connection/")
+def check_connection():
+    conn = None
 
-            cur.execute("SELECT version()")
+    db_version = None
 
-            db_version = cur.fetchone()
+    try:
+        conn = db_connect()
 
-            cur.close()
+        cur = conn.cursor()
 
-        except Exception as error:
-            raise Exception(str(error))
+        cur.execute("SELECT version()")
 
-        finally:
-            if conn is not None:
-                conn.close()
+        db_version = cur.fetchone()
 
-        if db_version:
-            return jsonify({"message": f"Connection successful: {db_version}"})
-        else:
-            return jsonify({"message": "Connection failed."})
+        cur.close()
 
-    @app.route("/view_tables/")
-    def view_tables():
-        conn = None
+    except Exception as error:
+        raise Exception(str(error))
 
-        tables = None
+    finally:
+        if conn is not None:
+            conn.close()
 
-        try:
-            conn = db_connect()
+    if db_version:
+        return jsonify({"message": f"Connection successful: {db_version}"})
+    else:
+        return jsonify({"message": "Connection failed."})
 
-            cur = conn.cursor()
 
-            cur.execute(
-                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
-            )
+@app.route("/view_tables/")
+def view_tables():
+    conn = None
 
-            tables = cur.fetchall()
+    tables = None
 
-            cur.close()
+    try:
+        conn = db_connect()
 
-        except Exception as error:
-            raise Exception(str(error))
+        cur = conn.cursor()
 
-        finally:
-            if conn is not None:
-                conn.close()
+        cur.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+        )
 
-        if tables:
-            return jsonify(
-                {
-                    "message": f"{len(tables)} tables found in the database.",
-                    "tables": list(table[0] for table in tables),
-                }
-            )
+        tables = cur.fetchall()
 
-        else:
-            return jsonify({"message": f"0 tables found in the database."})
+        cur.close()
 
-    @app.route("/view_all_records/")
-    def view_all_records():
-        conn = None
+    except Exception as error:
+        raise Exception(str(error))
 
-        records = None
+    finally:
+        if conn is not None:
+            conn.close()
 
-        formatted_records = []
+    if tables:
+        return jsonify(
+            {
+                "message": f"{len(tables)} tables found in the database.",
+                "tables": list(table[0] for table in tables),
+            }
+        )
 
-        try:
-            conn = db_connect()
+    else:
+        return jsonify({"message": f"0 tables found in the database."})
 
-            cur = conn.cursor()
 
-            cur.execute("SELECT * FROM milk_production;")
+@app.route("/view_all_records/")
+def view_all_records():
+    conn = None
 
-            records = cur.fetchall()
+    records = None
 
-            cur.close()
+    formatted_records = []
 
-        except Exception as error:
-            raise Exception(str(error))
+    try:
+        conn = db_connect()
 
-        finally:
-            if conn is not None:
-                conn.close()
+        cur = conn.cursor()
 
-        if records:
-            for record in records:
-                new_record = {
-                    "id": record[0],
-                    "name": record[1],
-                    "morning_production": record[2],
-                    "afternoon_production": record[3],
-                    "evening_production": record[4],
-                    "production_unit": record[5],
-                    "production_date": make_timestamp(str(record[6])),
-                }
+        cur.execute("SELECT * FROM milk_production;")
 
-                formatted_records.append(new_record)
+        records = cur.fetchall()
 
-            return jsonify(
-                {
-                    "message": f"{len(records)} records found in table 'milk_production'.",
-                    "records": list(record for record in formatted_records),
-                }
-            )
+        cur.close()
 
-        else:
-            return jsonify({"message": "0 records in table 'milk_production'."})
+    except Exception as error:
+        raise Exception(str(error))
 
-    @app.route("/view_record/<name>/")
-    def view_record(name):
-        conn = None
+    finally:
+        if conn is not None:
+            conn.close()
 
-        records = None
+    if records:
+        for record in records:
+            new_record = {
+                "id": record[0],
+                "name": record[1],
+                "morning_production": record[2],
+                "afternoon_production": record[3],
+                "evening_production": record[4],
+                "production_unit": record[5],
+                "production_date": make_timestamp(str(record[6])),
+            }
 
-        formatted_records = []
+            formatted_records.append(new_record)
 
-        try:
-            conn = db_connect()
+        return jsonify(
+            {
+                "message": f"{len(records)} records found in table 'milk_production'.",
+                "records": list(record for record in formatted_records),
+            }
+        )
 
-            cur = conn.cursor()
+    else:
+        return jsonify({"message": "0 records in table 'milk_production'."})
 
-            cur.execute(f"SELECT * FROM milk_production WHERE animal = '{name}';")
 
-            records = cur.fetchall()
+@app.route("/view_record/<name>/")
+def view_record(name):
+    conn = None
 
-            cur.close()
+    records = None
 
-        except Exception as error:
-            raise Exception(str(error))
+    formatted_records = []
 
-        finally:
-            if conn is not None:
-                conn.close()
+    try:
+        conn = db_connect()
 
-        if records:
-            for record in records:
-                new_record = {
-                    "id": record[0],
-                    "name": record[1],
-                    "morning_production": record[2],
-                    "afternoon_production": record[3],
-                    "evening_production": record[4],
-                    "production_unit": record[5],
-                    "production_date": make_timestamp(str(record[6])),
-                }
+        cur = conn.cursor()
 
-                formatted_records.append(new_record)
+        cur.execute(f"SELECT * FROM milk_production WHERE animal = '{name}';")
 
-            return jsonify(
-                {
-                    "message": f"{len(records)} records of '{name}' found in table 'milk_production'.",
-                    "records": list(record for record in formatted_records),
-                }
-            )
+        records = cur.fetchall()
 
-        else:
-            return jsonify(
-                {"message": f"0 records of '{name}' found in table 'milk_production'."}
-            )
+        cur.close()
 
-    @app.route("/view_record_by_date/<date>/")
-    def view_record_by_date(date):
-        conn = None
+    except Exception as error:
+        raise Exception(str(error))
 
-        records = None
+    finally:
+        if conn is not None:
+            conn.close()
 
-        formatted_records = []
+    if records:
+        for record in records:
+            new_record = {
+                "id": record[0],
+                "name": record[1],
+                "morning_production": record[2],
+                "afternoon_production": record[3],
+                "evening_production": record[4],
+                "production_unit": record[5],
+                "production_date": make_timestamp(str(record[6])),
+            }
 
-        date_obj = my_timezone.localize(datetime.strptime(date, "%Y-%m-%d"))
+            formatted_records.append(new_record)
 
-        try:
-            conn = db_connect()
+        return jsonify(
+            {
+                "message": f"{len(records)} records of '{name}' found in table 'milk_production'.",
+                "records": list(record for record in formatted_records),
+            }
+        )
 
-            cur = conn.cursor()
+    else:
+        return jsonify(
+            {"message": f"0 records of '{name}' found in table 'milk_production'."}
+        )
 
-            cur.execute(
-                f"SELECT * FROM milk_production WHERE production_date = '{date_obj.date()}';"
-            )
 
-            records = cur.fetchall()
+@app.route("/view_record_by_date/<date>/")
+def view_record_by_date(date):
+    conn = None
 
-            cur.close()
+    records = None
 
-        except Exception as error:
-            raise Exception(str(error))
+    formatted_records = []
 
-        finally:
-            if conn is not None:
-                conn.close()
+    date_obj = my_timezone.localize(datetime.strptime(date, "%Y-%m-%d"))
 
-        if records:
-            for record in records:
-                new_record = {
-                    "id": record[0],
-                    "name": record[1],
-                    "morning_production": record[2],
-                    "afternoon_production": record[3],
-                    "evening_production": record[4],
-                    "production_unit": record[5],
-                    "production_date": make_timestamp(str(record[6])),
-                }
+    try:
+        conn = db_connect()
 
-                formatted_records.append(new_record)
+        cur = conn.cursor()
 
-            return jsonify(
-                {
-                    "message": f"{len(records)} records from date '{date}' found in table 'milk_production'.",
-                    "records": list(record for record in formatted_records),
-                }
-            )
+        cur.execute(
+            f"SELECT * FROM milk_production WHERE production_date = '{date_obj.date()}';"
+        )
 
-        else:
-            return jsonify(
-                {
-                    "message": f"0 records from date '{date}' found in table 'milk_production'."
-                }
-            )
+        records = cur.fetchall()
 
-    schedule.every().day.at("19:00", "Africa/Nairobi").do(daily_update)
+        cur.close()
 
-    def run_scheduled_tasks():
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+    except Exception as error:
+        raise Exception(str(error))
 
-    schedule_thread = Thread(target=run_scheduled_tasks, daemon=True)
-    schedule_thread.start()
+    finally:
+        if conn is not None:
+            conn.close()
 
-    return app
+    if records:
+        for record in records:
+            new_record = {
+                "id": record[0],
+                "name": record[1],
+                "morning_production": record[2],
+                "afternoon_production": record[3],
+                "evening_production": record[4],
+                "production_unit": record[5],
+                "production_date": make_timestamp(str(record[6])),
+            }
+
+            formatted_records.append(new_record)
+
+        return jsonify(
+            {
+                "message": f"{len(records)} records from date '{date}' found in table 'milk_production'.",
+                "records": list(record for record in formatted_records),
+            }
+        )
+
+    else:
+        return jsonify(
+            {
+                "message": f"0 records from date '{date}' found in table 'milk_production'."
+            }
+        )
+
+
+task_lock = threading.Lock()
+
+
+def schedule_task():
+    with task_lock:
+        schedule.every().day.at("19:00", "Africa/Nairobi").do(daily_update)
+
+
+schedule_task()
+
+
+def run_scheduled_tasks():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+schedule_thread = threading.Thread(target=run_scheduled_tasks, daemon=True)
+schedule_thread.start()
 
 
 if __name__ == "__main__":
-    app = create_app()
-
     app.run(
         debug=os.getenv("FLASK_DEBUG", default=False),  # type: ignore
         port=os.getenv("PORT", default=5000),  # type: ignore
