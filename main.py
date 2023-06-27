@@ -124,53 +124,6 @@ def check_connection():
         return jsonify({"data": {"message": "Connection failed."}})
 
 
-@app.route("/view_tables/")
-def view_tables():
-    conn = None
-
-    tables = None
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
-        )
-
-        tables = cur.fetchall()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    if tables:
-        return jsonify(
-            {
-                "data": {
-                    "message": f"{len(tables)} tables found in the database.",
-                    "tables": list(table[0] for table in tables),
-                }
-            }
-        )
-
-    else:
-        return jsonify(
-            {
-                "data": {
-                    "message": f"0 tables found in the database.",
-                    "tables": [],
-                }
-            }
-        )
-
-
 @app.route("/view_all_records/")
 def view_all_records():
     conn = None
@@ -214,7 +167,7 @@ def view_all_records():
         return jsonify(
             {
                 "data": {
-                    "message": f"{len(records)} records found in table 'milk_production'.",
+                    "message": f"{len(records)} record(s) found in table 'milk_production'.",
                     "records": list(record for record in formatted_records),
                 }
             }
@@ -274,7 +227,7 @@ def view_record(name):
         return jsonify(
             {
                 "data": {
-                    "message": f"{len(records)} records of '{name}' found in table 'milk_production'.",
+                    "message": f"{len(records)} record(s) of '{name}' found in table 'milk_production'.",
                     "records": list(record for record in formatted_records),
                 }
             }
@@ -338,7 +291,7 @@ def view_record_by_date(date):
         return jsonify(
             {
                 "data": {
-                    "message": f"{len(records)} records from date '{date}' found in table 'milk_production'.",
+                    "message": f"{len(records)} record(s) from date '{date}' found in table 'milk_production'.",
                     "records": list(record for record in formatted_records),
                 }
             }
