@@ -108,3 +108,5 @@ def test_daily_update():
     res = daily_update(testing=True)
 
     assert res == True
+
+    delete_tables()
