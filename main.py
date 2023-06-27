@@ -32,7 +32,7 @@ def db_connect():
     )
 
 
-def daily_update():
+def daily_update(testing: bool = False):
     conn = None
 
     records = None
@@ -61,25 +61,29 @@ def daily_update():
         if conn is not None:
             conn.close()
 
+    if not testing:
         client = Client(account_sid, auth_token)
 
-    if records:
-        for recipient in recipients:
-            client.messages.create(
-                from_=sender,
-                body=f"Check webapp for updates on records for date '{date_obj.date()}'. \nLink: {web_app}/date/{date_obj.date()}",
-                to=recipient,  # type: ignore
-            )
+        if records:
+            for recipient in recipients:
+                client.messages.create(
+                    from_=sender,
+                    body=f"Check webapp for updates on records for date '{date_obj.date()}'. \nLink: {web_app}/date/{date_obj.date()}",
+                    to=recipient,  # type: ignore
+                )
+
+        else:
+            for recipient in recipients:
+                client.messages.create(
+                    from_=sender,
+                    body=f"No records were found for date '{date_obj.date()}'.",
+                    to=recipient,  # type: ignore
+                )
+
+        return recipients
 
     else:
-        for recipient in recipients:
-            client.messages.create(
-                from_=sender,
-                body=f"No records were found for date '{date_obj.date()}'.",
-                to=recipient,  # type: ignore
-            )
-
-    return
+        return True
 
 
 def make_timestamp(date_sr: str):
