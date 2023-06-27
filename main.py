@@ -119,9 +119,9 @@ def check_connection():
             conn.close()
 
     if db_version:
-        return jsonify({"message": f"Connection successful: {db_version}"})
+        return jsonify({"data": {"message": f"Connection successful: {db_version}"}})
     else:
-        return jsonify({"message": "Connection failed."})
+        return jsonify({"data": {"message": "Connection failed."}})
 
 
 @app.route("/view_tables/")
@@ -153,13 +153,22 @@ def view_tables():
     if tables:
         return jsonify(
             {
-                "message": f"{len(tables)} tables found in the database.",
-                "tables": list(table[0] for table in tables),
+                "data": {
+                    "message": f"{len(tables)} tables found in the database.",
+                    "tables": list(table[0] for table in tables),
+                }
             }
         )
 
     else:
-        return jsonify({"message": f"0 tables found in the database."})
+        return jsonify(
+            {
+                "data": {
+                    "message": f"0 tables found in the database.",
+                    "tables": [],
+                }
+            }
+        )
 
 
 @app.route("/view_all_records/")
@@ -204,13 +213,22 @@ def view_all_records():
 
         return jsonify(
             {
-                "message": f"{len(records)} records found in table 'milk_production'.",
-                "records": list(record for record in formatted_records),
+                "data": {
+                    "message": f"{len(records)} records found in table 'milk_production'.",
+                    "records": list(record for record in formatted_records),
+                }
             }
         )
 
     else:
-        return jsonify({"message": "0 records in table 'milk_production'."})
+        return jsonify(
+            {
+                "data": {
+                    "message": "0 records in table 'milk_production'.",
+                    "records": [],
+                }
+            }
+        )
 
 
 @app.route("/view_record/<name>/")
@@ -255,14 +273,21 @@ def view_record(name):
 
         return jsonify(
             {
-                "message": f"{len(records)} records of '{name}' found in table 'milk_production'.",
-                "records": list(record for record in formatted_records),
+                "data": {
+                    "message": f"{len(records)} records of '{name}' found in table 'milk_production'.",
+                    "records": list(record for record in formatted_records),
+                }
             }
         )
 
     else:
         return jsonify(
-            {"message": f"0 records of '{name}' found in table 'milk_production'."}
+            {
+                "data": {
+                    "message": f"0 records of '{name}' found in table 'milk_production'.",
+                    "records": [],
+                }
+            }
         )
 
 
@@ -312,15 +337,20 @@ def view_record_by_date(date):
 
         return jsonify(
             {
-                "message": f"{len(records)} records from date '{date}' found in table 'milk_production'.",
-                "records": list(record for record in formatted_records),
+                "data": {
+                    "message": f"{len(records)} records from date '{date}' found in table 'milk_production'.",
+                    "records": list(record for record in formatted_records),
+                }
             }
         )
 
     else:
         return jsonify(
             {
-                "message": f"0 records from date '{date}' found in table 'milk_production'."
+                "data": {
+                    "message": f"0 records from date '{date}' found in table 'milk_production'.",
+                    "records": [],
+                }
             }
         )
 
