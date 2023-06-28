@@ -181,7 +181,7 @@ def view_all_records():
         return jsonify(
             {
                 "data": {
-                    "message": "0 records in table 'milk_production'.",
+                    "message": "0 record(s) in table 'milk_production'.",
                     "records": [],
                 }
             }
@@ -241,7 +241,7 @@ def view_record(name):
         return jsonify(
             {
                 "data": {
-                    "message": f"0 records of '{name}' found in table 'milk_production'.",
+                    "message": f"0 record(s) of '{name}' found in table 'milk_production'.",
                     "records": [],
                 }
             }
@@ -305,7 +305,7 @@ def view_record_by_date(date):
         return jsonify(
             {
                 "data": {
-                    "message": f"0 records from date '{date}' found in table 'milk_production'.",
+                    "message": f"0 record(s) from date '{date}' found in table 'milk_production'.",
                     "records": [],
                 }
             }
