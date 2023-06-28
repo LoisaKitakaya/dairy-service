@@ -1,6 +1,6 @@
 import pytest
-from db.db import *
-from db.actions import (
+from db import *
+from actions import (
     create_tables as ct,
     delete_tables as dt,
     create_record as _ct,

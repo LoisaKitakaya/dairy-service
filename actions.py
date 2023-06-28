@@ -22,7 +22,7 @@ def create_tables():
             CREATE TABLE
                 milk_production (
                     id SERIAL PRIMARY KEY,
-                    animal VARCHAR(50) UNIQUE NOT NULL,
+                    animal VARCHAR(50) NOT NULL,
                     morning_production FLOAT NOT NULL,
                     afternoon_production FLOAT NOT NULL,
                     evening_production FLOAT NOT NULL,
