@@ -95,7 +95,7 @@ def make_timestamp(date_sr: str):
 app = Flask(__name__)
 
 
-CORS(app, resources={r"/*": {"origins": f"{web_app}"}})
+CORS(app, resources={r"/*": {"origins": web_app}})
 
 
 @app.route("/check_connection/")
@@ -317,7 +317,7 @@ task_lock = threading.Lock()
 
 def schedule_task():
     with task_lock:
-        schedule.every().day.at("19:00", "Africa/Nairobi").do(daily_update)
+        schedule.every().day.at("20:00", "Africa/Nairobi").do(daily_update)
 
 
 schedule_task()
