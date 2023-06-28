@@ -1,14 +1,12 @@
 ---
-title: Flask
-description: A popular minimal server framework for Python
+title: Dairy Service
+description: A web service that provides access to a dairy farm's records.
 tags:
   - python
   - flask
 ---
 
-# Python Flask Example
-
-This is a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app that serves a simple JSON response.
+# Python Flask Application
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/zUcpux)
 
@@ -17,7 +15,6 @@ This is a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app that serves a
 - Python
 - Flask
 
-## 💁‍♀️ How to use
+## 💁‍♀️ Used by
 
-- Install Python requirements `pip install -r requirements.txt`
-- Start the server for development `python3 main.py`
+- This backend is used by the [dairy-farm](https://github.com/LoisaKitakaya/dairy-farm)
