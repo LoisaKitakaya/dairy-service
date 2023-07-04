@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 load_dotenv()
 
@@ -21,38 +22,43 @@ customers_collection = db.milk_customers
 users_collection = db.app_users
 
 
-def resolve_get_all_users(*_):
-    all_users = None
+def resolve_get_all_production_records(_, info):
+    all_products_records = None
 
     try:
-        all_users = users_collection.find()
+        all_products_records = production_collection.find()
 
     except Exception as e:
         raise Exception(str(e))
 
     finally:
-        return all_users
+        return all_products_records
 
 
-def resolve_get_all_production_records(*_):
+def resolve_get_production_record(_, info, id):
+    production_record = None
+
+    try:
+        production_record = production_collection.find_one({"_id": ObjectId(id)})
+
+    except Exception as e:
+        raise Exception(str(e))
+
+    finally:
+        return production_record
+
+
+def resolve_get_all_payment_records(_, info):
     pass
 
 
-def resolve_get_production_record(*_):
+def resolve_get_payment_record(_, info):
     pass
 
 
-def resolve_get_all_payment_records(*_):
+def resolve_get_all_customer_records(_, info):
     pass
 
 
-def resolve_get_payment_record(*_):
-    pass
-
-
-def resolve_get_all_customer_records(*_):
-    pass
-
-
-def resolve_get_customer_record(*_):
+def resolve_get_customer_record(_, info):
     pass

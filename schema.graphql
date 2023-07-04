@@ -1,49 +1,58 @@
-type users {
-  _id: ID!
-  username: String!
-  status: String!
-  permission: String!
-  date_joined: Float!
-}
-
 type production {
-    _id: ID!
-    name: String!
-    morning_production: Float!
-    afternoon_production: Float!
-    evening_production: Float!
-    production_date: Float!
-    created_on: Float!
-    updated_on: Float!
+  _id: ID!
+  name: String!
+  morning_production: Float!
+  afternoon_production: Float!
+  evening_production: Float!
+  production_date: Float!
+  created_on: Float!
+  updated_on: Float!
 }
 
 type payment {
-    _id: ID!
-    customer: String!
-    amount: Float!
-    method: String!
-    quantity: Float!
-    paid_on: Float!
-    created_on: Float!
-    updated_on: Float!
+  _id: ID!
+  customer: String!
+  amount: Float!
+  method: String!
+  quantity: Float!
+  paid_on: Float!
+  created_on: Float!
+  updated_on: Float!
 }
 
 type customer {
-    _id: ID!
-    name: String!
-    priority: String!
-    trip: Int!
-    quantity: Float!
-    phone: String!
-    created_on: Float!
-    updated_on: Float!
+  _id: ID!
+  name: String!
+  priority: String!
+  trip: Int!
+  quantity: Float!
+  phone: String!
+  created_on: Float!
+  updated_on: Float!
 }
 
 type Query {
-  get_all_users: [users!]!
+  get_all_production_records: [production!]!
+  get_production_record(id: ID!): production!
 }
 
 type Mutation {
   create_user(username: String!, password: String!): Boolean!
   authenticate_user(username: String!, password: String!): String!
+  create_production_record(
+    name: String!
+    morning_production: String!
+    afternoon_production: String!
+    evening_production: String!
+    production_date: String!
+  ): Boolean!
+  update_production_record(
+    id: ID!
+    name: String!
+    morning_production: String!
+    afternoon_production: String!
+    evening_production: String!
+    production_date: String!
+  ): Boolean!
+  delete_production_record(id: ID!): Boolean!
 }
