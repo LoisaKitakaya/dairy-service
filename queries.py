@@ -32,3 +32,27 @@ def resolve_get_all_users(*_):
 
     finally:
         return all_users
+
+
+def resolve_get_all_production_records(*_):
+    pass
+
+
+def resolve_get_production_record(*_):
+    pass
+
+
+def resolve_get_all_payment_records(*_):
+    pass
+
+
+def resolve_get_payment_record(*_):
+    pass
+
+
+def resolve_get_all_customer_records(*_):
+    pass
+
+
+def resolve_get_customer_record(*_):
+    pass

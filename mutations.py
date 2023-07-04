@@ -56,6 +56,7 @@ def resolve_create_user(*_, username: str, password: str):
             "username": username,
             "password": hashed_password,
             "status": "active",
+            "permission": "read/write",
             "date_joined": get_datetime(),
         }
 
@@ -79,12 +80,46 @@ def resolve_authenticate_user(*_, username: str, password: str):
 
     if existing_user:
         if bcrypt.checkpw(password.encode(), hashed_password):
-            token = jwt.encode({"username": username, "id": str(user_id)}, salt)
-
-            return token
+            return jwt.encode({"username": username, "id": str(user_id)}, salt)
 
         else:
             raise Exception("Entered wrong password or username.")
 
     else:
         raise Exception("Entered wrong password or username.")
+
+
+def resolve_create_production_record(_, info):
+    pass
+
+
+def resolve_update_production_record(_, info):
+    pass
+
+
+def resolve_delete_production_record(_, info):
+    pass
+
+
+def resolve_create_payment_record(_, info):
+    pass
+
+
+def resolve_update_payment_record(_, info):
+    pass
+
+
+def resolve_delete_payment_record(_, info):
+    pass
+
+
+def resolve_create_customer_record(_, info):
+    pass
+
+
+def resolve_update_customer_record(_, info):
+    pass
+
+
+def resolve_delete_customer_record(_, info):
+    pass
