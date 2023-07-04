@@ -1,0 +1,15 @@
+type users {
+  _id: ID!
+  username: String!
+  status: String!
+  date_joined: Float!
+}
+
+type Query {
+  get_all_users: [users!]!
+}
+
+type Mutation {
+  create_user(username: String!, password: String!): Boolean!
+  authenticate_user(username: String!, password: String!): String!
+}

@@ -4,12 +4,10 @@ import schedule
 import threading
 from flask_cors import CORS
 from dotenv import load_dotenv
-from tasks import daily_update
 from flask import Flask, jsonify, request
 from ariadne.explorer import ExplorerGraphiQL
 from ariadne import (
     QueryType,
-    ScalarType,
     MutationType,
     graphql_sync,
     load_schema_from_path,
@@ -24,6 +22,8 @@ web_app = os.getenv("WEB_APP")
 """
 Scheduled operations
 """
+
+from tasks import daily_update
 
 task_lock = threading.Lock()
 
@@ -50,10 +50,22 @@ schedule_thread.start()
 GraphQl setup
 """
 
+from queries import *
+from mutations import *
+
 type_defs = load_schema_from_path("schema.graphql")
 
 query = QueryType()
 mutation = MutationType()
+
+# app queries
+
+query.set_field("get_all_users", resolve_get_all_users)
+
+# app mutations
+
+mutation.set_field("create_user", resolve_create_user)
+mutation.set_field("authenticate_user", resolve_authenticate_user)
 
 schema = make_executable_schema(type_defs, [query, mutation])
 
@@ -70,12 +82,12 @@ CORS(app, resources={r"/*": {"origins": web_app}})
 explorer_html = ExplorerGraphiQL().html(None)
 
 
-@app.route("/graphql", methods=["GET"])
+@app.route("/graphql/", methods=["GET"])
 def graphql_explorer():
     return explorer_html, 200
 
 
-@app.route("/graphql", methods=["POST"])
+@app.route("/graphql/", methods=["POST"])
 def graphql_server():
     data = request.get_json()
 
