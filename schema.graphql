@@ -11,7 +11,7 @@ type production {
 
 type payment {
   _id: ID!
-  customer: String!
+  name: String!
   amount: Float!
   method: String!
   quantity: Float!
@@ -34,11 +34,16 @@ type customer {
 type Query {
   get_all_production_records: [production!]!
   get_production_record(id: ID!): production!
+  get_all_payment_records: [payment!]!
+  get_payment_record(id: ID!): payment!
+  get_all_customer_records: [customer!]!
+  get_customer_record(id: ID!): customer!
 }
 
 type Mutation {
   create_user(username: String!, password: String!): Boolean!
   authenticate_user(username: String!, password: String!): String!
+  
   create_production_record(
     name: String!
     morning_production: String!
@@ -55,4 +60,36 @@ type Mutation {
     production_date: String!
   ): Boolean!
   delete_production_record(id: ID!): Boolean!
+  create_payment_record(
+    name: String!
+    amount: String!
+    payment_method: String!
+    quantity: String!
+    payment_date: String!
+  ): Boolean!
+  update_payment_record(
+    id: ID!
+    name: String!
+    amount: String!
+    payment_method: String!
+    quantity: String!
+    payment_date: String!
+  ): Boolean!
+  delete_payment_record(id: ID!): Boolean!
+  create_customer_record(
+    name: String!
+    priority: String!
+    contact: String!
+    trip: String!
+    package: String!
+  ): Boolean!
+  update_customer_record(
+    id: ID!
+    name: String!
+    priority: String!
+    contact: String!
+    trip: String!
+    package: String!
+  ): Boolean!
+  delete_customer_record(id: ID!): Boolean!
 }

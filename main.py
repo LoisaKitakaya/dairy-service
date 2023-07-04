@@ -62,6 +62,10 @@ mutation = MutationType()
 
 query.set_field("get_all_production_records", resolve_get_all_production_records)
 query.set_field("get_production_record", resolve_get_production_record)
+query.set_field("get_all_payment_records", resolve_get_all_payment_records)
+query.set_field("get_payment_record", resolve_get_payment_record)
+query.set_field("get_all_customer_records", resolve_get_all_customer_records)
+query.set_field("get_customer_record", resolve_get_customer_record)
 
 # app mutations
 
@@ -71,6 +75,12 @@ mutation.set_field("authenticate_user", resolve_authenticate_user)
 mutation.set_field("create_production_record", resolve_create_production_record)
 mutation.set_field("update_production_record", resolve_update_production_record)
 mutation.set_field("delete_production_record", resolve_delete_production_record)
+mutation.set_field("create_payment_record", resolve_create_payment_record)
+mutation.set_field("update_payment_record", resolve_update_payment_record)
+mutation.set_field("delete_payment_record", resolve_delete_payment_record)
+mutation.set_field("create_customer_record", resolve_create_customer_record)
+mutation.set_field("update_customer_record", resolve_update_customer_record)
+mutation.set_field("delete_customer_record", resolve_delete_customer_record)
 
 schema = make_executable_schema(type_defs, [query, mutation])
 
