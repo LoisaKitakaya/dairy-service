@@ -2,32 +2,28 @@ import os
 import time
 import schedule
 import threading
-from pytz import timezone
 from flask_cors import CORS
-from datetime import datetime
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from tasks import daily_update
+from flask import Flask, jsonify, request
+from ariadne.explorer import ExplorerGraphiQL
+from ariadne import (
+    QueryType,
+    ScalarType,
+    MutationType,
+    graphql_sync,
+    load_schema_from_path,
+    make_executable_schema,
+)
 
 load_dotenv()
-
-my_timezone = timezone("Africa/Nairobi")
 
 web_app = os.getenv("WEB_APP")
 
 
-def db_connect():
-    pass
-
-
-def make_timestamp(date_sr: str):
-    date_obj = my_timezone.localize(datetime.strptime(date_sr, "%Y-%m-%d"))
-
-    return date_obj.timestamp()
-
-
-def daily_update(testing: bool = False):
-    pass
-
+"""
+Scheduled operations
+"""
 
 task_lock = threading.Lock()
 
@@ -50,10 +46,45 @@ schedule_thread = threading.Thread(target=run_scheduled_tasks, daemon=True)
 schedule_thread.start()
 
 
+"""
+GraphQl setup
+"""
+
+type_defs = load_schema_from_path("schema.graphql")
+
+query = QueryType()
+mutation = MutationType()
+
+schema = make_executable_schema(type_defs, [query, mutation])
+
+
+"""
+Main Flask application
+"""
+
 app = Flask(__name__)
 
 
 CORS(app, resources={r"/*": {"origins": web_app}})
+
+explorer_html = ExplorerGraphiQL().html(None)
+
+
+@app.route("/graphql", methods=["GET"])
+def graphql_explorer():
+    return explorer_html, 200
+
+
+@app.route("/graphql", methods=["POST"])
+def graphql_server():
+    data = request.get_json()
+
+    success, result = graphql_sync(
+        schema, data, context_value={"request": request}, debug=app.debug
+    )
+
+    status_code = 200 if success else 400
+    return jsonify(result), status_code
 
 
 if __name__ == "__main__":
