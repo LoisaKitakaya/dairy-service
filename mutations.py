@@ -5,6 +5,7 @@ from pytz import timezone
 from datetime import datetime
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from auth import is_authenticated
 from bson.objectid import ObjectId
 
 load_dotenv()
@@ -86,6 +87,7 @@ def resolve_authenticate_user(*_, username: str, password: str):
         raise Exception("Entered wrong password or username.")
 
 
+@is_authenticated
 def resolve_create_production_record(
     _,
     info,
@@ -120,6 +122,7 @@ def resolve_create_production_record(
         raise Exception("Write operation failed.")
 
 
+@is_authenticated
 def resolve_update_production_record(
     _,
     info,
@@ -147,7 +150,7 @@ def resolve_update_production_record(
             try:
                 assert update.acknowledged == True
 
-            except:
+            except AssertionError:
                 raise Exception("Write operation failed.")
 
         if morning_production:
@@ -159,7 +162,7 @@ def resolve_update_production_record(
             try:
                 assert update.acknowledged == True
 
-            except:
+            except AssertionError:
                 raise Exception("Write operation failed.")
 
         if afternoon_production:
@@ -171,7 +174,7 @@ def resolve_update_production_record(
             try:
                 assert update.acknowledged == True
 
-            except:
+            except AssertionError:
                 raise Exception("Write operation failed.")
 
         if evening_production:
@@ -183,7 +186,7 @@ def resolve_update_production_record(
             try:
                 assert update.acknowledged == True
 
-            except:
+            except AssertionError:
                 raise Exception("Write operation failed.")
 
         if production_date:
@@ -199,7 +202,7 @@ def resolve_update_production_record(
             try:
                 assert update.acknowledged == True
 
-            except:
+            except AssertionError:
                 raise Exception("Write operation failed.")
 
         return True
@@ -208,6 +211,7 @@ def resolve_update_production_record(
         raise Exception("Empty request. Nothing to update.")
 
 
+@is_authenticated
 def resolve_delete_production_record(_, info, id):
     delete = production_collection.delete_one({"_id": ObjectId(id)})
 
@@ -218,25 +222,31 @@ def resolve_delete_production_record(_, info, id):
         raise Exception("Write operation failed.")
 
 
+@is_authenticated
 def resolve_create_payment_record(_, info):
     pass
 
 
+@is_authenticated
 def resolve_update_payment_record(_, info):
     pass
 
 
+@is_authenticated
 def resolve_delete_payment_record(_, info):
     pass
 
 
+@is_authenticated
 def resolve_create_customer_record(_, info):
     pass
 
 
+@is_authenticated
 def resolve_update_customer_record(_, info):
     pass
 
 
+@is_authenticated
 def resolve_delete_customer_record(_, info):
     pass

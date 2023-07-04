@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from auth import is_authenticated
 from bson.objectid import ObjectId
 
 load_dotenv()
@@ -19,9 +20,8 @@ payment_collection = db.milk_payment
 
 customers_collection = db.milk_customers
 
-users_collection = db.app_users
 
-
+@is_authenticated
 def resolve_get_all_production_records(_, info):
     all_products_records = None
 
@@ -35,6 +35,7 @@ def resolve_get_all_production_records(_, info):
         return all_products_records
 
 
+@is_authenticated
 def resolve_get_production_record(_, info, id):
     production_record = None
 
@@ -48,17 +49,21 @@ def resolve_get_production_record(_, info, id):
         return production_record
 
 
+@is_authenticated
 def resolve_get_all_payment_records(_, info):
     pass
 
 
+@is_authenticated
 def resolve_get_payment_record(_, info):
     pass
 
 
+@is_authenticated
 def resolve_get_all_customer_records(_, info):
     pass
 
 
+@is_authenticated
 def resolve_get_customer_record(_, info):
     pass
