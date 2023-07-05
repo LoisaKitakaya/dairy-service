@@ -5,11 +5,13 @@
     "python.formatting.provider": "none",
     "python.analysis.typeCheckingMode": "basic",
     "cSpell.words": [
+        "addrs",
         "bson",
         "checkpw",
         "dotenv",
         "gensalt",
         "Graphi",
+        "gunicorn",
         "hashpw",
         "jsonify",
         "psycopg",

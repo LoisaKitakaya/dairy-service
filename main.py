@@ -24,14 +24,14 @@ web_app = os.getenv("WEB_APP")
 Scheduled operations
 """
 
-from app.tasks import daily_update
+from app.tasks import weekly_update
 
 task_lock = threading.Lock()
 
 
 def schedule_task():
     with task_lock:
-        schedule.every().day.at("20:00", "Africa/Nairobi").do(daily_update)
+        schedule.every().day.at("20:00", "Africa/Nairobi").do(weekly_update)
 
 
 schedule_task()
