@@ -24,7 +24,7 @@ web_app = os.getenv("WEB_APP")
 Scheduled operations
 """
 
-from tasks import daily_update
+from app.tasks import daily_update
 
 task_lock = threading.Lock()
 
@@ -51,8 +51,8 @@ schedule_thread.start()
 GraphQl setup
 """
 
-from queries import *
-from mutations import *
+from app.queries import *
+from app.mutations import *
 
 type_defs = load_schema_from_path("schema.graphql")
 
