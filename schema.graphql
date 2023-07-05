@@ -1,3 +1,15 @@
+scalar Token
+
+type users {
+  _id: ID!
+  username: String!
+  status: String!
+  permission: String!
+  date_joined: String!
+  created_on: Float!
+  updated_on: Float!
+}
+
 type production {
   _id: ID!
   name: String!
@@ -13,9 +25,9 @@ type payment {
   _id: ID!
   name: String!
   amount: Float!
-  method: String!
+  payment_method: String!
   quantity: Float!
-  paid_on: Float!
+  payment_date: Float!
   created_on: Float!
   updated_on: Float!
 }
@@ -24,14 +36,16 @@ type customer {
   _id: ID!
   name: String!
   priority: String!
-  trip: Int!
-  quantity: Float!
   phone: String!
+  trip: String!
+  package: Float!
   created_on: Float!
   updated_on: Float!
 }
 
 type Query {
+  get_all_users: [users!]!
+
   get_all_production_records: [production!]!
   get_production_record(id: ID!): production!
   get_all_payment_records: [payment!]!
@@ -42,8 +56,8 @@ type Query {
 
 type Mutation {
   create_user(username: String!, password: String!): Boolean!
-  authenticate_user(username: String!, password: String!): String!
-  
+  authenticate_user(username: String!, password: String!): Token!
+
   create_production_record(
     name: String!
     morning_production: String!
@@ -79,7 +93,7 @@ type Mutation {
   create_customer_record(
     name: String!
     priority: String!
-    contact: String!
+    phone: String!
     trip: String!
     package: String!
   ): Boolean!
@@ -87,7 +101,7 @@ type Mutation {
     id: ID!
     name: String!
     priority: String!
-    contact: String!
+    phone: String!
     trip: String!
     package: String!
   ): Boolean!

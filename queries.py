@@ -20,6 +20,22 @@ payment_collection = db.milk_payment
 
 customers_collection = db.milk_customers
 
+users_collection = db.app_users
+
+
+@is_authenticated
+def resolve_get_all_users(_, info):
+    all_users = None
+
+    try:
+        all_users = users_collection.find()
+
+    except Exception as e:
+        raise Exception(str(e))
+
+    finally:
+        return all_users
+
 
 @is_authenticated
 def resolve_get_all_production_records(_, info):
@@ -36,7 +52,7 @@ def resolve_get_all_production_records(_, info):
 
 
 @is_authenticated
-def resolve_get_production_record(_, info, id):
+def resolve_get_production_record(_, info, id: str):
     production_record = None
 
     try:
@@ -64,7 +80,7 @@ def resolve_get_all_payment_records(_, info):
 
 
 @is_authenticated
-def resolve_get_payment_record(_, info, id):
+def resolve_get_payment_record(_, info, id: str):
     payment_record = None
 
     try:
@@ -92,7 +108,7 @@ def resolve_get_all_customer_records(_, info):
 
 
 @is_authenticated
-def resolve_get_customer_record(_, info, id):
+def resolve_get_customer_record(_, info, id: str):
     customer_record = None
 
     try:

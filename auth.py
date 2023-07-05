@@ -3,6 +3,7 @@ import jwt
 import functools
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 load_dotenv()
 
@@ -42,7 +43,7 @@ def is_authenticated(func):
             decode = jwt.decode(token, salt, algorithms=["HS256"])
 
             try:
-                user = users_collection.find_one({"username": decode["username"]})
+                user = users_collection.find_one({"_id": ObjectId(decode["id"])})
 
                 assert user is not None and user["username"] == decode["username"]
 

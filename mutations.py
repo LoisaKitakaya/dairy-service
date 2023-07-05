@@ -42,20 +42,22 @@ mutation resolvers
 """
 
 
-def resolve_create_user(*_, username: str, password: str):
+def resolve_create_user(*_, username: str, password: str) -> bool:
     existing_user = users_collection.find_one({"username": username})
 
-    datetime_obj = my_timezone.localize(datetime.now())
-
     if not existing_user:
+        datetime_obj = my_timezone.localize(datetime.now())
+
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
         new_user = {
             "username": username,
             "password": hashed_password,
             "status": "active",
-            "permission": "read/write",
+            "permission": "read",
             "date_joined": datetime_obj.timestamp(),
+            "created_on": datetime_obj.timestamp(),
+            "updated_on": datetime_obj.timestamp(),
         }
 
         user = users_collection.insert_one(new_user)
@@ -70,14 +72,18 @@ def resolve_create_user(*_, username: str, password: str):
         raise Exception("User already exists.")
 
 
-def resolve_authenticate_user(*_, username: str, password: str):
+def resolve_authenticate_user(*_, username: str, password: str) -> dict:
     existing_user = users_collection.find_one({"username": username})
 
     hashed_password = existing_user["password"]  # type: ignore
+    user_id = existing_user["_id"]  # type: ignore
 
     if existing_user:
         if bcrypt.checkpw(password.encode(), hashed_password):
-            return jwt.encode({"username": username}, salt)
+            return {
+                "authenticated": True,
+                "token": jwt.encode({"username": username, "id": str(user_id)}, salt),
+            }
 
         else:
             raise Exception("Entered wrong password or username.")
@@ -95,7 +101,7 @@ def resolve_create_production_record(
     afternoon_production: str,
     evening_production: str,
     production_date: str,
-):
+) -> bool:
     date_obj = my_timezone.localize(
         datetime.strptime(production_date, "%Y-%m-%dT%H:%M")
     )
@@ -125,15 +131,13 @@ def resolve_create_production_record(
 def resolve_update_production_record(
     _,
     info,
-    id,
+    id: str,
     name: str,
     morning_production: str,
     afternoon_production: str,
     evening_production: str,
     production_date: str,
-):
-    production_obj = production_collection.find_one({"_id": ObjectId(id)})
-
+) -> bool:
     if (
         name
         or morning_production
@@ -143,7 +147,8 @@ def resolve_update_production_record(
     ):
         if name:
             update = production_collection.update_one(
-                {"name": production_obj["name"]}, {"$set": {"name": name}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"name": name}},
             )
 
             try:
@@ -154,7 +159,7 @@ def resolve_update_production_record(
 
         if morning_production:
             update = production_collection.update_one(
-                {"morning_production": production_obj["morning_production"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"morning_production": float(morning_production)}},
             )
 
@@ -166,7 +171,7 @@ def resolve_update_production_record(
 
         if afternoon_production:
             update = production_collection.update_one(
-                {"afternoon_production": production_obj["afternoon_production"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"afternoon_production": float(afternoon_production)}},
             )
 
@@ -178,7 +183,7 @@ def resolve_update_production_record(
 
         if evening_production:
             update = production_collection.update_one(
-                {"evening_production": production_obj["evening_production"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"evening_production": float(evening_production)}},
             )
 
@@ -194,7 +199,7 @@ def resolve_update_production_record(
             )
 
             update = production_collection.update_one(
-                {"production_date": production_obj["production_date"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"production_date": date_obj.timestamp()}},
             )
 
@@ -207,7 +212,7 @@ def resolve_update_production_record(
         date_obj = my_timezone.localize(datetime.now())
 
         update = production_collection.update_one(
-            {"updated_on": production_obj["updated_on"]},  # type: ignore
+            {"_id": ObjectId(id)},
             {"$set": {"updated_on": date_obj.timestamp()}},
         )
 
@@ -218,7 +223,7 @@ def resolve_update_production_record(
 
 
 @is_authenticated
-def resolve_delete_production_record(_, info, id):
+def resolve_delete_production_record(_, info, id: str) -> bool:
     delete = production_collection.delete_one({"_id": ObjectId(id)})
 
     if delete.deleted_count == 1:
@@ -237,7 +242,7 @@ def resolve_create_payment_record(
     payment_method: str,
     quantity: str,
     payment_date: str,
-):
+) -> bool:
     date_obj = my_timezone.localize(datetime.strptime(payment_date, "%Y-%m-%dT%H:%M"))
 
     datetime_obj = my_timezone.localize(datetime.now())
@@ -247,7 +252,7 @@ def resolve_create_payment_record(
         "amount": float(amount),
         "payment_method": payment_method,
         "quantity": float(quantity),
-        "payment_date": date_obj,
+        "payment_date": date_obj.timestamp(),
         "created_on": datetime_obj.timestamp(),
         "updated_on": datetime_obj.timestamp(),
     }
@@ -265,19 +270,18 @@ def resolve_create_payment_record(
 def resolve_update_payment_record(
     _,
     info,
-    id,
+    id: str,
     name: str,
     amount: str,
     payment_method: str,
     quantity: str,
     payment_date: str,
-):
-    payment_obj = payment_collection.find_one({"_id": ObjectId(id)})
-
+) -> bool:
     if name or amount or payment_method or quantity or payment_date:
         if name:
             update = payment_collection.update_one(
-                {"name": payment_obj["name"]}, {"$set": {"name": name}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"name": name}},
             )
 
             try:
@@ -288,7 +292,8 @@ def resolve_update_payment_record(
 
         if amount:
             update = payment_collection.update_one(
-                {"amount": payment_obj["amount"]}, {"$set": {"amount": float(amount)}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"amount": float(amount)}},
             )
 
             try:
@@ -299,7 +304,7 @@ def resolve_update_payment_record(
 
         if payment_method:
             update = payment_collection.update_one(
-                {"payment_method": payment_obj["payment_method"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"payment_method": payment_method}},
             )
 
@@ -311,7 +316,7 @@ def resolve_update_payment_record(
 
         if quantity:
             update = payment_collection.update_one(
-                {"quantity": payment_obj["quantity"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"quantity": float(quantity)}},
             )
 
@@ -327,7 +332,7 @@ def resolve_update_payment_record(
             )
 
             update = payment_collection.update_one(
-                {"payment_date": payment_obj["payment_date"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"payment_date": date_obj.timestamp()}},
             )
 
@@ -340,7 +345,7 @@ def resolve_update_payment_record(
         date_obj = my_timezone.localize(datetime.now())
 
         update = production_collection.update_one(
-            {"updated_on": production_obj["updated_on"]},  # type: ignore
+            {"_id": ObjectId(id)},
             {"$set": {"updated_on": date_obj.timestamp()}},
         )
 
@@ -351,7 +356,7 @@ def resolve_update_payment_record(
 
 
 @is_authenticated
-def resolve_delete_payment_record(_, info, id):
+def resolve_delete_payment_record(_, info, id: str) -> bool:
     delete = payment_collection.delete_one({"_id": ObjectId(id)})
 
     if delete.deleted_count == 1:
@@ -363,14 +368,20 @@ def resolve_delete_payment_record(_, info, id):
 
 @is_authenticated
 def resolve_create_customer_record(
-    _, info, name: str, priority: str, contact: str, trip: str, package: str
-):
+    _,
+    info,
+    name: str,
+    priority: str,
+    phone: str,
+    trip: str,
+    package: str,
+) -> bool:
     datetime_obj = my_timezone.localize(datetime.now())
 
     customer_obj = {
         "name": name,
         "priority": priority,
-        "contact": contact,
+        "phone": phone,
         "trip": trip,
         "package": float(package),
         "created_on": datetime_obj.timestamp(),
@@ -388,14 +399,20 @@ def resolve_create_customer_record(
 
 @is_authenticated
 def resolve_update_customer_record(
-    _, info, id, name: str, priority: str, contact: str, trip: str, package: str
-):
-    customer_obj = customers_collection.find_one({"_id": ObjectId(id)})
-
-    if name or priority or contact or trip or package:
+    _,
+    info,
+    id: str,
+    name: str,
+    priority: str,
+    phone: str,
+    trip: str,
+    package: str,
+) -> bool:
+    if name or priority or phone or trip or package:
         if name:
             update = customers_collection.update_one(
-                {"name": customer_obj["name"]}, {"$set": {"name": name}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"name": name}},
             )
 
             try:
@@ -406,7 +423,8 @@ def resolve_update_customer_record(
 
         if priority:
             update = customers_collection.update_one(
-                {"priority": customer_obj["priority"]}, {"$set": {"priority": priority}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"priority": priority}},
             )
 
             try:
@@ -415,9 +433,10 @@ def resolve_update_customer_record(
             except AssertionError:
                 raise Exception("Write operation failed.")
 
-        if contact:
+        if phone:
             update = customers_collection.update_one(
-                {"contact": customer_obj["contact"]}, {"$set": {"contact": contact}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"phone": phone}},
             )
 
             try:
@@ -428,7 +447,8 @@ def resolve_update_customer_record(
 
         if trip:
             update = customers_collection.update_one(
-                {"trip": customer_obj["trip"]}, {"$set": {"trip": trip}}  # type: ignore
+                {"_id": ObjectId(id)},
+                {"$set": {"trip": trip}},
             )
 
             try:
@@ -439,7 +459,7 @@ def resolve_update_customer_record(
 
         if package:
             update = customers_collection.update_one(
-                {"package": customer_obj["package"]},  # type: ignore
+                {"_id": ObjectId(id)},
                 {"$set": {"package": float(package)}},
             )
 
@@ -452,7 +472,7 @@ def resolve_update_customer_record(
         date_obj = my_timezone.localize(datetime.now())
 
         update = production_collection.update_one(
-            {"updated_on": production_obj["updated_on"]},  # type: ignore
+            {"_id": ObjectId(id)},
             {"$set": {"updated_on": date_obj.timestamp()}},
         )
 
@@ -463,7 +483,7 @@ def resolve_update_customer_record(
 
 
 @is_authenticated
-def resolve_delete_customer_record(_, info, id):
+def resolve_delete_customer_record(_, info, id: str) -> bool:
     delete = customers_collection.delete_one({"_id": ObjectId(id)})
 
     if delete.deleted_count == 1:

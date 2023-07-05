@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request
 from ariadne.explorer import ExplorerGraphiQL
 from ariadne import (
     QueryType,
+    ScalarType,
     MutationType,
     graphql_sync,
     load_schema_from_path,
@@ -58,7 +59,19 @@ type_defs = load_schema_from_path("schema.graphql")
 query = QueryType()
 mutation = MutationType()
 
+# custom scalar type
+
+token_scalar = ScalarType("Token")
+
+
+@token_scalar.serializer
+def serialize_token(value):
+    return value
+
+
 # app queries
+
+query.set_field("get_all_users", resolve_get_all_users)
 
 query.set_field("get_all_production_records", resolve_get_all_production_records)
 query.set_field("get_production_record", resolve_get_production_record)
@@ -82,7 +95,7 @@ mutation.set_field("create_customer_record", resolve_create_customer_record)
 mutation.set_field("update_customer_record", resolve_update_customer_record)
 mutation.set_field("delete_customer_record", resolve_delete_customer_record)
 
-schema = make_executable_schema(type_defs, [query, mutation])
+schema = make_executable_schema(type_defs, [query, mutation, token_scalar])
 
 
 """
