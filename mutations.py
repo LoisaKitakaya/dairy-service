@@ -1,11 +1,12 @@
 import os
 import jwt
+import pyotp
 import bcrypt
 from pytz import timezone
 from datetime import datetime
 from dotenv import load_dotenv
 from pymongo import MongoClient
-from auth import is_authenticated
+from decorators import is_authenticated
 from bson.objectid import ObjectId
 
 load_dotenv()
@@ -55,6 +56,7 @@ def resolve_create_user(*_, username: str, password: str) -> bool:
             "password": hashed_password,
             "status": "active",
             "permission": "read",
+            "otp_secret": str(pyotp.random_hex()),
             "date_joined": datetime_obj.timestamp(),
             "created_on": datetime_obj.timestamp(),
             "updated_on": datetime_obj.timestamp(),

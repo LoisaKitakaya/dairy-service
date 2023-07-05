@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
-from auth import is_authenticated
+from decorators import is_authenticated
 from bson.objectid import ObjectId
 
 load_dotenv()
