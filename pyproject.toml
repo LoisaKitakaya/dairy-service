@@ -19,6 +19,8 @@ ariadne = "^0.20.1"
 pymongo = "^4.4.0"
 bcrypt = "^4.0.1"
 pyjwt = "^2.7.0"
+pyotp = "^2.8.0"
+beautifulsoup4 = "^4.12.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
