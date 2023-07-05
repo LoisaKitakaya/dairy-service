@@ -1,5 +1,5 @@
 import pytest
-from main import app as flask_app, daily_update
+from main import app as flask_app
 
 
 class TestAppMutations:
