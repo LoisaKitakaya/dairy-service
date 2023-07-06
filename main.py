@@ -79,6 +79,8 @@ query.set_field("get_all_payment_records", resolve_get_all_payment_records)
 query.set_field("get_payment_record", resolve_get_payment_record)
 query.set_field("get_all_customer_records", resolve_get_all_customer_records)
 query.set_field("get_customer_record", resolve_get_customer_record)
+query.set_field("get_all_expense_records", resolve_get_all_expense_records)
+query.set_field("get_expense_record", resolve_get_expense_record)
 
 # app mutations
 
@@ -94,6 +96,9 @@ mutation.set_field("delete_payment_record", resolve_delete_payment_record)
 mutation.set_field("create_customer_record", resolve_create_customer_record)
 mutation.set_field("update_customer_record", resolve_update_customer_record)
 mutation.set_field("delete_customer_record", resolve_delete_customer_record)
+mutation.set_field("create_expense_record", resolve_create_expense_record)
+mutation.set_field("update_expense_record", resolve_update_expense_record)
+mutation.set_field("delete_expense_record", resolve_delete_expense_record)
 
 schema = make_executable_schema(type_defs, [query, mutation, token_scalar])
 

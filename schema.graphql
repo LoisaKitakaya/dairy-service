@@ -43,6 +43,16 @@ type customer {
   updated_on: Float!
 }
 
+type expenses {
+  _id: ID!
+  item: String!
+  category: String!
+  amount: Float!
+  date_of_action: Float!
+  created_on: Float!
+  updated_on: Float!
+}
+
 type Query {
   get_all_users: [users!]!
 
@@ -52,6 +62,8 @@ type Query {
   get_payment_record(id: ID!): payment!
   get_all_customer_records: [customer!]!
   get_customer_record(id: ID!): customer!
+  get_all_expense_records: [expenses!]!
+  get_expense_record(id: ID!): expenses!
 }
 
 type Mutation {
@@ -106,4 +118,18 @@ type Mutation {
     package: String!
   ): Boolean!
   delete_customer_record(id: ID!): Boolean!
+  create_expense_record(
+    item: String!
+    category: String!
+    amount: String!
+    date_of_action: String!
+  ): Boolean!
+  update_expense_record(
+    id: ID!
+    item: String!
+    category: String!
+    amount: String!
+    date_of_action: String!
+  ): Boolean!
+  delete_expense_record(id: ID!): Boolean!
 }

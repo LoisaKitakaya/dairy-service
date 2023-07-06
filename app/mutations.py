@@ -28,6 +28,8 @@ payment_collection = db.milk_payment
 
 customers_collection = db.milk_customers
 
+expenses_collection = db.production_expenses
+
 users_collection = db.app_users
 
 
@@ -487,6 +489,113 @@ def resolve_update_customer_record(
 @is_authenticated
 def resolve_delete_customer_record(_, info, id: str) -> bool:
     delete = customers_collection.delete_one({"_id": ObjectId(id)})
+
+    if delete.deleted_count == 1:
+        return True
+
+    else:
+        raise Exception("Write operation failed.")
+
+
+@is_authenticated
+def resolve_create_expense_record(
+    _, info, item: str, category: str, amount: str, date_of_action: str
+) -> bool:
+    date_obj = my_timezone.localize(datetime.strptime(date_of_action, "%Y-%m-%dT%H:%M"))
+
+    datetime_obj = my_timezone.localize(datetime.now())
+
+    expense_obj = {
+        "item": item,
+        "category": category,
+        "amount": float(amount),
+        "date_of_action": date_obj.timestamp(),
+        "created_on": datetime_obj.timestamp(),
+        "updated_on": datetime_obj.timestamp(),
+    }
+
+    expense = expenses_collection.insert_one(expense_obj)
+
+    if expense.acknowledged:
+        return True
+
+    else:
+        raise Exception("Write operation failed.")
+
+
+@is_authenticated
+def resolve_update_expense_record(
+    _, info, id: str, item: str, category: str, amount: str, date_of_action: str
+) -> bool:
+    if item or category or amount or date_of_action:
+        if item:
+            update = expenses_collection.update_one(
+                {"_id": ObjectId(id)},
+                {"$set": {"item": item}},
+            )
+
+            try:
+                assert update.acknowledged == True
+
+            except AssertionError:
+                raise Exception("Write operation failed.")
+
+        if category:
+            update = expenses_collection.update_one(
+                {"_id": ObjectId(id)},
+                {"$set": {"category": category}},
+            )
+
+            try:
+                assert update.acknowledged == True
+
+            except AssertionError:
+                raise Exception("Write operation failed.")
+
+        if amount:
+            update = expenses_collection.update_one(
+                {"_id": ObjectId(id)},
+                {"$set": {"amount": float(amount)}},
+            )
+
+            try:
+                assert update.acknowledged == True
+
+            except AssertionError:
+                raise Exception("Write operation failed.")
+
+        if date_of_action:
+            date_obj = my_timezone.localize(
+                datetime.strptime(date_of_action, "%Y-%m-%dT%H:%M")
+            )
+
+            update = expenses_collection.update_one(
+                {"_id": ObjectId(id)},
+                {"$set": {"date_of_action": date_obj.timestamp()}},
+            )
+
+            try:
+                assert update.acknowledged == True
+
+            except AssertionError:
+                raise Exception("Write operation failed.")
+
+        date_obj = my_timezone.localize(datetime.now())
+
+        update = production_collection.update_one(
+            {"_id": ObjectId(id)},
+            {"$set": {"updated_on": date_obj.timestamp()}},
+        )
+
+        return True
+
+    else:
+        raise Exception("Empty request. Nothing to update.")
+
+
+@is_authenticated
+def resolve_delete_expense_record(_, info, id: str) -> bool:
+    delete = expenses_collection.delete_one({"_id": ObjectId(id)})
 
     if delete.deleted_count == 1:
         return True

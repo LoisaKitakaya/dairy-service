@@ -20,6 +20,8 @@ payment_collection = db.milk_payment
 
 customers_collection = db.milk_customers
 
+expenses_collection = db.production_expenses
+
 users_collection = db.app_users
 
 
@@ -119,3 +121,31 @@ def resolve_get_customer_record(_, info, id: str):
 
     finally:
         return customer_record
+
+
+@is_authenticated
+def resolve_get_all_expense_records(_, info):
+    all_expense_records = None
+
+    try:
+        all_expense_records = expenses_collection.find()
+
+    except Exception as e:
+        raise Exception(str(e))
+
+    finally:
+        return all_expense_records
+
+
+@is_authenticated
+def resolve_get_expense_record(_, info, id: str):
+    expense_record = None
+
+    try:
+        expense_record = expenses_collection.find_one({"_id": ObjectId(id)})
+
+    except Exception as e:
+        raise Exception(str(e))
+
+    finally:
+        return expense_record

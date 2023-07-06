@@ -20,6 +20,8 @@ payment_collection = db.milk_payment
 
 customers_collection = db.milk_customers
 
+expenses_collection = db.production_expenses
+
 
 """
 timezone and datetime settings
