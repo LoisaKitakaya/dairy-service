@@ -31,7 +31,7 @@ task_lock = threading.Lock()
 
 def schedule_task():
     with task_lock:
-        schedule.every().day.at("20:00", "Africa/Nairobi").do(weekly_update)
+        schedule.every().monday.at("06:00", "Africa/Nairobi").do(weekly_update)
 
 
 schedule_task()

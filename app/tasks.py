@@ -3,8 +3,8 @@ import smtplib, ssl
 from pytz import timezone
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from report import GenerateReport
 from email.mime.text import MIMEText
+from app.report import GenerateReport
 from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 
@@ -65,7 +65,9 @@ def weekly_update():
 
         report_link = soup.find("a")
 
-        report_link["href"] = f"https://rislo-dairy-farm.netlify.app/reports/{end.date()}to{start.date()}"  # type: ignore
+        url = "https://rislo-dairy-farm.netlify.app"
+
+        report_link["href"] = f"{url}/reports/{end.date()}to{start.date()}"  # type: ignore
 
         soup.smooth()
 
