@@ -56,7 +56,7 @@ mutation resolvers
 """
 
 
-def resolve_create_user(*_, email: str, password: str) -> bool:
+def resolve_create_user(*_, username: str, email: str, password: str) -> bool:
     existing_user = users_collection.find_one({"email": email})
 
     if not existing_user:
@@ -65,6 +65,7 @@ def resolve_create_user(*_, email: str, password: str) -> bool:
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
         new_user = {
+            "username": username,
             "email": email,
             "password": hashed_password,
             "status": "active",
@@ -86,24 +87,25 @@ def resolve_create_user(*_, email: str, password: str) -> bool:
         raise Exception("User already exists.")
 
 
-def resolve_authenticate_user(*_, email: str, password: str) -> dict:
-    existing_user = users_collection.find_one({"email": email})
+def resolve_authenticate_user(*_, username: str, password: str) -> dict:
+    existing_user = users_collection.find_one({"username": username})
 
-    hashed_password = existing_user["password"]  # type: ignore
     user_id = existing_user["_id"]  # type: ignore
+    hashed_password = existing_user["password"]  # type: ignore
+    user_permission = existing_user["permission"] # type: ignore
 
     if existing_user:
         if bcrypt.checkpw(password.encode(), hashed_password):
             return {
                 "authenticated": True,
-                "token": jwt.encode({"email": email, "id": str(user_id)}, SALT),
+                "token": jwt.encode({"id": str(user_id), "username": username, "permission": user_permission}, SALT),
             }
 
         else:
-            raise Exception("Entered wrong password or email.")
+            raise Exception("Entered wrong password or username.")
 
     else:
-        raise Exception("Entered wrong password or email.")
+        raise Exception("Entered wrong password or username.")
 
 
 def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:

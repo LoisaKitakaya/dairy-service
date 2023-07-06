@@ -98,6 +98,8 @@ query.set_field("get_expense_record", resolve_get_expense_record)
 
 mutation.set_field("create_user", resolve_create_user)
 mutation.set_field("authenticate_user", resolve_authenticate_user)
+mutation.set_field("request_otp", resolve_request_otp)
+mutation.set_field("password_reset", resolve_password_reset)
 
 mutation.set_field("create_production_record", resolve_create_production_record)
 mutation.set_field("update_production_record", resolve_update_production_record)

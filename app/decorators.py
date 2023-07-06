@@ -45,7 +45,7 @@ def is_authenticated(func):
             try:
                 user = users_collection.find_one({"_id": ObjectId(decode["id"])})
 
-                assert user is not None and user["email"] == decode["email"]
+                assert user is not None and user["username"] == decode["username"]
 
             except:
                 raise Exception("Invalid authentication token.")
