@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from email.mime.text import MIMEText
-from app.decorators import is_authenticated
 from email.mime.multipart import MIMEMultipart
+from app.decorators import is_authenticated, check_permission
 
 load_dotenv()
 
@@ -92,13 +92,20 @@ def resolve_authenticate_user(*_, username: str, password: str) -> dict:
 
     user_id = existing_user["_id"]  # type: ignore
     hashed_password = existing_user["password"]  # type: ignore
-    user_permission = existing_user["permission"] # type: ignore
+    user_permission = existing_user["permission"]  # type: ignore
 
     if existing_user:
         if bcrypt.checkpw(password.encode(), hashed_password):
             return {
                 "authenticated": True,
-                "token": jwt.encode({"id": str(user_id), "username": username, "permission": user_permission}, SALT),
+                "token": jwt.encode(
+                    {
+                        "id": str(user_id),
+                        "username": username,
+                        "permission": user_permission,
+                    },
+                    SALT,
+                ),
             }
 
         else:
@@ -127,7 +134,7 @@ def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
 
         url = "https://rislo-dairy-farm.netlify.app"
 
-        tag["href"] = f"{url}/{jwt.encode({"email": email}, SALT)}"  # type: ignore
+        tag["href"] = url + "/" + jwt.encode({"email": email}, SALT)  # type: ignore
 
         soup.smooth()
 
@@ -146,13 +153,12 @@ def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
             "status": "success",
             "message": "OTP code sent to the provided email address. Please check your inbox.",
         }
-    
+
     else:
         return {
             "status": "success",
             "credentials": f"{jwt.encode({'email': email}, SALT)}",
         }
-
 
 
 def resolve_password_reset(*_, email: str, new_password: str) -> dict:
@@ -185,6 +191,7 @@ def resolve_password_reset(*_, email: str, new_password: str) -> dict:
 
 
 @is_authenticated
+@check_permission
 def resolve_create_production_record(
     _,
     info,
@@ -220,6 +227,7 @@ def resolve_create_production_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_update_production_record(
     _,
     info,
@@ -315,6 +323,7 @@ def resolve_update_production_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_delete_production_record(_, info, id: str) -> bool:
     delete = production_collection.delete_one({"_id": ObjectId(id)})
 
@@ -326,6 +335,7 @@ def resolve_delete_production_record(_, info, id: str) -> bool:
 
 
 @is_authenticated
+@check_permission
 def resolve_create_payment_record(
     _,
     info,
@@ -359,6 +369,7 @@ def resolve_create_payment_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_update_payment_record(
     _,
     info,
@@ -448,6 +459,7 @@ def resolve_update_payment_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_delete_payment_record(_, info, id: str) -> bool:
     delete = payment_collection.delete_one({"_id": ObjectId(id)})
 
@@ -459,6 +471,7 @@ def resolve_delete_payment_record(_, info, id: str) -> bool:
 
 
 @is_authenticated
+@check_permission
 def resolve_create_customer_record(
     _,
     info,
@@ -490,6 +503,7 @@ def resolve_create_customer_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_update_customer_record(
     _,
     info,
@@ -575,6 +589,7 @@ def resolve_update_customer_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_delete_customer_record(_, info, id: str) -> bool:
     delete = customers_collection.delete_one({"_id": ObjectId(id)})
 
@@ -586,6 +601,7 @@ def resolve_delete_customer_record(_, info, id: str) -> bool:
 
 
 @is_authenticated
+@check_permission
 def resolve_create_expense_record(
     _, info, item: str, category: str, amount: str, date_of_action: str
 ) -> bool:
@@ -612,6 +628,7 @@ def resolve_create_expense_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_update_expense_record(
     _, info, id: str, item: str, category: str, amount: str, date_of_action: str
 ) -> bool:
@@ -682,6 +699,7 @@ def resolve_update_expense_record(
 
 
 @is_authenticated
+@check_permission
 def resolve_delete_expense_record(_, info, id: str) -> bool:
     delete = expenses_collection.delete_one({"_id": ObjectId(id)})
 
