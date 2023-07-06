@@ -7,15 +7,15 @@ from bson.objectid import ObjectId
 
 load_dotenv()
 
-salt = os.getenv("SECRET_KEY")
+SALT = os.getenv("SECRET_KEY")
 
 """
 Database configuration
 """
 
-client = MongoClient(os.getenv("DATABASE_URI"))
+CLIENT = MongoClient(os.getenv("DATABASE_URI"))
 
-db = client.dairy_db
+db = CLIENT.dairy_db
 
 users_collection = db.app_users
 
@@ -40,12 +40,12 @@ def is_authenticated(func):
 
             token = auth_header_list[1]
 
-            decode = jwt.decode(token, salt, algorithms=["HS256"])
+            decode = jwt.decode(token, SALT, algorithms=["HS256"])
 
             try:
                 user = users_collection.find_one({"_id": ObjectId(decode["id"])})
 
-                assert user is not None and user["username"] == decode["username"]
+                assert user is not None and user["email"] == decode["email"]
 
             except:
                 raise Exception("Invalid authentication token.")

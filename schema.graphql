@@ -1,8 +1,10 @@
+scalar OTP
 scalar Token
+scalar Password
 
 type users {
   _id: ID!
-  username: String!
+  email: String!
   status: String!
   permission: String!
   date_joined: String!
@@ -67,8 +69,10 @@ type Query {
 }
 
 type Mutation {
-  create_user(username: String!, password: String!): Boolean!
-  authenticate_user(username: String!, password: String!): Token!
+  create_user(email: String!, password: String!): Boolean!
+  authenticate_user(email: String!, password: String!): Token!
+  request_otp(email: String!, testing: Boolean): OTP!
+  password_reset(otp: String!, new_password: String!): Password!
 
   create_production_record(
     name: String!

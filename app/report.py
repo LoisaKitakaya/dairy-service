@@ -10,9 +10,9 @@ load_dotenv()
 Database configuration
 """
 
-client = MongoClient(os.getenv("DATABASE_URI"))
+CLIENT = MongoClient(os.getenv("DATABASE_URI"))
 
-db = client.dairy_db
+db = CLIENT.dairy_db
 
 production_collection = db.milk_production
 

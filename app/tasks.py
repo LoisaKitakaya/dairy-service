@@ -63,11 +63,11 @@ def weekly_update():
 
         soup = BeautifulSoup(template, "html.parser")
 
-        report_link = soup.find("a")
+        tag = soup.find("a")
 
         url = "https://rislo-dairy-farm.netlify.app"
 
-        report_link["href"] = f"{url}/reports/{end.date()}to{start.date()}"  # type: ignore
+        tag["href"] = f"{url}/reports/{end.date()}to{start.date()}"  # type: ignore
 
         soup.smooth()
 

@@ -1,26 +1,37 @@
 import os
 import jwt
-import pyotp
 import bcrypt
+import smtplib, ssl
 from pytz import timezone
 from datetime import datetime
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from email.mime.text import MIMEText
 from app.decorators import is_authenticated
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
-salt = os.getenv("SECRET_KEY")
+SALT = os.getenv("SECRET_KEY")
+
+
+"""
+email settings
+"""
+
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+SENDER_EMAIL_PASSWORD = os.getenv("SENDER_EMAIL_PASSWORD")
 
 
 """
 Database configuration
 """
 
-client = MongoClient(os.getenv("DATABASE_URI"))
+CLIENT = MongoClient(os.getenv("DATABASE_URI"))
 
-db = client.dairy_db
+db = CLIENT.dairy_db
 
 production_collection = db.milk_production
 
@@ -45,8 +56,8 @@ mutation resolvers
 """
 
 
-def resolve_create_user(*_, username: str, password: str) -> bool:
-    existing_user = users_collection.find_one({"username": username})
+def resolve_create_user(*_, email: str, password: str) -> bool:
+    existing_user = users_collection.find_one({"email": email})
 
     if not existing_user:
         datetime_obj = my_timezone.localize(datetime.now())
@@ -54,11 +65,10 @@ def resolve_create_user(*_, username: str, password: str) -> bool:
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
         new_user = {
-            "username": username,
+            "email": email,
             "password": hashed_password,
             "status": "active",
             "permission": "read",
-            "otp_secret": str(pyotp.random_hex()),
             "date_joined": datetime_obj.timestamp(),
             "created_on": datetime_obj.timestamp(),
             "updated_on": datetime_obj.timestamp(),
@@ -76,8 +86,8 @@ def resolve_create_user(*_, username: str, password: str) -> bool:
         raise Exception("User already exists.")
 
 
-def resolve_authenticate_user(*_, username: str, password: str) -> dict:
-    existing_user = users_collection.find_one({"username": username})
+def resolve_authenticate_user(*_, email: str, password: str) -> dict:
+    existing_user = users_collection.find_one({"email": email})
 
     hashed_password = existing_user["password"]  # type: ignore
     user_id = existing_user["_id"]  # type: ignore
@@ -86,14 +96,90 @@ def resolve_authenticate_user(*_, username: str, password: str) -> dict:
         if bcrypt.checkpw(password.encode(), hashed_password):
             return {
                 "authenticated": True,
-                "token": jwt.encode({"username": username, "id": str(user_id)}, salt),
+                "token": jwt.encode({"email": email, "id": str(user_id)}, SALT),
             }
 
         else:
-            raise Exception("Entered wrong password or username.")
+            raise Exception("Entered wrong password or email.")
 
     else:
-        raise Exception("Entered wrong password or username.")
+        raise Exception("Entered wrong password or email.")
+
+
+def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
+    if not testing:
+        message = MIMEMultipart()
+
+        message["Subject"] = "Requested Password Reset"
+        message["From"] = SENDER_EMAIL
+        message["To"] = email
+
+        context = ssl.create_default_context()
+
+        with open("templates/password.html", "r") as file:
+            template = file.read()
+
+        soup = BeautifulSoup(template, "html.parser")
+
+        tag = soup.find("a")
+
+        url = "https://rislo-dairy-farm.netlify.app"
+
+        tag["href"] = f"{url}/{jwt.encode({"email": email}, SALT)}"  # type: ignore
+
+        soup.smooth()
+
+        template = soup.prettify()
+
+        email_template = MIMEText(template, "html")
+
+        message.attach(email_template)
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(SENDER_EMAIL, SENDER_EMAIL_PASSWORD)  # type: ignore
+
+            server.sendmail(SENDER_EMAIL, email, message.as_string())  # type: ignore
+
+        return {
+            "status": "success",
+            "message": "OTP code sent to the provided email address. Please check your inbox.",
+        }
+    
+    else:
+        return {
+            "status": "success",
+            "credentials": f"{jwt.encode({'email': email}, SALT)}",
+        }
+
+
+
+def resolve_password_reset(*_, email: str, new_password: str) -> dict:
+    user = users_collection.find_one({"email": email})
+
+    hashed_password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
+
+    update = users_collection.update_one(
+        {"_id": ObjectId(user["_id"])},  # type: ignore
+        {"$set": {"password": hashed_password}},
+    )
+
+    try:
+        assert update.acknowledged == True
+
+    except AssertionError:
+        raise Exception("Write operation failed.")
+
+    date_obj = my_timezone.localize(datetime.now())
+
+    update = production_collection.update_one(
+        {"_id": ObjectId(user["_id"])},  # type: ignore
+        {"$set": {"updated_on": date_obj.timestamp()}},
+    )
+
+    return {
+        "status": "success",
+        "message": "Your password has been updated successfully.",
+    }
 
 
 @is_authenticated

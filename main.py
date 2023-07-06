@@ -17,7 +17,7 @@ from ariadne import (
 
 load_dotenv()
 
-web_app = os.getenv("WEB_APP")
+WEB_APP = os.getenv("WEB_APP")
 
 
 """
@@ -61,11 +61,23 @@ mutation = MutationType()
 
 # custom scalar type
 
+otp_scalar = ScalarType("OTP")
 token_scalar = ScalarType("Token")
+password_scalar = ScalarType("Password")
+
+
+@otp_scalar.serializer
+def serialize_otp(value):
+    return value
 
 
 @token_scalar.serializer
 def serialize_token(value):
+    return value
+
+
+@password_scalar.serializer
+def serialize_password(value):
     return value
 
 
@@ -100,7 +112,10 @@ mutation.set_field("create_expense_record", resolve_create_expense_record)
 mutation.set_field("update_expense_record", resolve_update_expense_record)
 mutation.set_field("delete_expense_record", resolve_delete_expense_record)
 
-schema = make_executable_schema(type_defs, [query, mutation, token_scalar])
+schema = make_executable_schema(
+    type_defs,
+    [query, mutation, otp_scalar, token_scalar, password_scalar],
+)
 
 
 """
@@ -110,7 +125,7 @@ Main Flask application
 app = Flask(__name__)
 
 
-CORS(app, resources={r"/*": {"origins": web_app}})
+CORS(app, resources={r"/*": {"origins": WEB_APP}})
 
 explorer_html = ExplorerGraphiQL().html(None)
 
