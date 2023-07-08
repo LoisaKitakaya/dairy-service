@@ -3,12 +3,14 @@ import smtplib, ssl
 from pytz import timezone
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from app.report import AutoReport
 from email.mime.text import MIMEText
-from app.report import GenerateReport
 from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
+
+WEB_APP = os.getenv("WEB_APP")
 
 
 """
@@ -24,7 +26,7 @@ report generation function
 
 
 def generate_report(start_date: datetime, end_date: datetime):
-    report_gen = GenerateReport(start_date, end_date)
+    report_gen = AutoReport(start_date, end_date)
 
 
 """
@@ -65,9 +67,7 @@ def weekly_update():
 
         tag = soup.find("a")
 
-        url = "https://rislo-dairy-farm.netlify.app"
-
-        tag["href"] = f"{url}/reports/{end.date()}to{start.date()}"  # type: ignore
+        tag["href"] = f"{WEB_APP}/reports/{end.date()}to{start.date()}"  # type: ignore
 
         soup.smooth()
 

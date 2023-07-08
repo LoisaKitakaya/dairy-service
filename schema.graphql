@@ -72,7 +72,7 @@ type Query {
 type Mutation {
   create_user(username: String!, email: String!, password: String!): Boolean!
   authenticate_user(username: String!, password: String!): Token!
-  request_otp(email: String!, testing: Boolean): OTP!
+  request_reset(email: String!, testing: Boolean): OTP!
   password_reset(email: String!, new_password: String!): Password!
 
   create_production_record(

@@ -3,18 +3,19 @@ import jwt
 import bcrypt
 import smtplib, ssl
 from pytz import timezone
-from datetime import datetime
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from email.mime.text import MIMEText
+from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from app.decorators import is_authenticated, check_permission
 
 load_dotenv()
 
 SALT = os.getenv("SECRET_KEY")
+WEB_APP = os.getenv("WEB_APP")
 
 
 """
@@ -115,7 +116,7 @@ def resolve_authenticate_user(*_, username: str, password: str) -> dict:
         raise Exception("Entered wrong password or username.")
 
 
-def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
+def resolve_request_reset(*_, email: str, testing: bool = False) -> dict:
     if not testing:
         message = MIMEMultipart()
 
@@ -132,9 +133,11 @@ def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
 
         tag = soup.find("a")
 
-        url = "https://rislo-dairy-farm.netlify.app"
+        expiry_date = datetime.now() + timedelta(hours=1)
 
-        tag["href"] = url + "/" + jwt.encode({"email": email}, SALT)  # type: ignore
+        exp = my_timezone.localize(expiry_date).timestamp()
+
+        tag["href"] = WEB_APP + "/reset" + "/" + jwt.encode({"email": email, "exp": exp}, SALT)  # type: ignore
 
         soup.smooth()
 
@@ -151,7 +154,7 @@ def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
 
         return {
             "status": "success",
-            "message": "OTP code sent to the provided email address. Please check your inbox.",
+            "message": f"A reset link has been sent to {email}.",
         }
 
     else:
@@ -162,32 +165,39 @@ def resolve_request_otp(*_, email: str, testing: bool = False) -> dict:
 
 
 def resolve_password_reset(*_, email: str, new_password: str) -> dict:
-    user = users_collection.find_one({"email": email})
-
-    hashed_password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
-
-    update = users_collection.update_one(
-        {"_id": ObjectId(user["_id"])},  # type: ignore
-        {"$set": {"password": hashed_password}},
-    )
-
     try:
-        assert update.acknowledged == True
+        user = users_collection.find_one({"email": email})
+
+        assert user is not None
 
     except AssertionError:
-        raise Exception("Write operation failed.")
+        raise Exception("Reset failed. Issue: wrong email address.")
 
-    date_obj = my_timezone.localize(datetime.now())
+    else:
+        hashed_password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
 
-    update = production_collection.update_one(
-        {"_id": ObjectId(user["_id"])},  # type: ignore
-        {"$set": {"updated_on": date_obj.timestamp()}},
-    )
+        update = users_collection.update_one(
+            {"_id": ObjectId(user["_id"])},  # type: ignore
+            {"$set": {"password": hashed_password}},
+        )
 
-    return {
-        "status": "success",
-        "message": "Your password has been updated successfully.",
-    }
+        try:
+            assert update.acknowledged == True
+
+        except AssertionError:
+            raise Exception("Write operation failed.")
+
+        date_obj = my_timezone.localize(datetime.now())
+
+        update = production_collection.update_one(
+            {"_id": ObjectId(user["_id"])},  # type: ignore
+            {"$set": {"updated_on": date_obj.timestamp()}},
+        )
+
+        return {
+            "status": "success",
+            "message": "Your password has been updated successfully.",
+        }
 
 
 @is_authenticated
