@@ -321,7 +321,7 @@ class TelegramBot:
 
         return
 
-    def commands(self, chat_id: str, command: list):
+    def commands(self, chat_id: str):
         message = """
             All available commands:
             \n-> /commands

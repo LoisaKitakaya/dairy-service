@@ -202,7 +202,7 @@ def telegram_server():
                 bot.permissions(chat_id, command)
 
             elif command[0] == "commands":
-                bot.commands(chat_id, command)
+                bot.commands(chat_id)
 
             elif command[0] == "start":
                 bot.start(chat_id)
