@@ -58,9 +58,10 @@ mutation resolvers
 
 
 def resolve_create_user(*_, username: str, email: str, password: str) -> bool:
-    existing_user = users_collection.find_one({"email": email})
+    existing_email = users_collection.find_one({"email": email})
+    existing_username = users_collection.find_one({"username": username})
 
-    if not existing_user:
+    if not existing_email and not existing_username:
         datetime_obj = my_timezone.localize(datetime.now())
 
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())

@@ -2,8 +2,10 @@ import os
 import time
 import schedule
 import threading
+from flask import Response
 from flask_cors import CORS
 from dotenv import load_dotenv
+from app.bot import TelegramBot
 from flask import Flask, jsonify, request
 from ariadne.explorer import ExplorerGraphiQL
 from ariadne import (
@@ -18,6 +20,7 @@ from ariadne import (
 load_dotenv()
 
 WEB_APP = os.getenv("WEB_APP")
+BOT = os.getenv("TELEGRAM_TOKEN")
 
 
 """
@@ -48,7 +51,7 @@ schedule_thread.start()
 
 
 """
-GraphQl setup
+GraphQl api setup
 """
 
 from app.queries import *
@@ -132,6 +135,11 @@ CORS(app, resources={r"/*": {"origins": WEB_APP}})
 explorer_html = ExplorerGraphiQL().html(None)
 
 
+"""
+GraphQL api endpoint
+"""
+
+
 @app.route("/graphql/", methods=["GET"])
 def graphql_explorer():
     return explorer_html, 200
@@ -147,6 +155,66 @@ def graphql_server():
 
     status_code = 200 if success else 400
     return jsonify(result), status_code
+
+
+"""
+Telegram webhook
+"""
+
+
+@app.route("/telegram/", methods=["POST"])
+def telegram_server():
+    bot = TelegramBot(BOT)  # type: ignore
+
+    bot_commands = bot.list_commands
+
+    parsed_data = bot.parse_message(request.get_json())
+
+    chat_id = parsed_data["chat_id"]
+    command = parsed_data["msg"].strip("/")
+
+    command = command.split()
+
+    try:
+        if command[0] not in bot_commands:
+            reply = """
+                Entered invalid command.
+                \nType /commands to get a list of all the valid commands commands.
+            
+            """
+
+            bot.send_message(chat_id, reply)
+
+        else:
+            if command[0] == "new":
+                bot.new(chat_id, command)
+
+            elif command[0] == "update":
+                bot.update(chat_id, command)
+
+            elif command[0] == "view":
+                bot.view(chat_id, command)
+
+            elif command[0] == "delete":
+                bot.delete(chat_id, command)
+
+            elif command[0] == "permissions":
+                bot.permissions(chat_id, command)
+
+            elif command[0] == "commands":
+                bot.commands(chat_id, command)
+
+            elif command[0] == "start":
+                bot.start(chat_id)
+
+    except Exception as e:
+        if os.getenv("FLASK_DEBUG"):
+            print(e)
+        else:
+            pass
+
+    finally:
+        return Response("ok", 200)
 
 
 if __name__ == "__main__":

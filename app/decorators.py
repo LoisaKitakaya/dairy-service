@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 load_dotenv()
 
 SALT = os.getenv("SECRET_KEY")
-PERMISSION = "read" if os.getenv("FREE_PASS") else "read/write"
+PERMISSION = "read" if os.getenv("FREE_PASS") else "read&write"
 
 """
 Database configuration
