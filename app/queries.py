@@ -44,7 +44,7 @@ def resolve_get_all_production_records(_, info):
     all_products_records = None
 
     try:
-        all_products_records = production_collection.find().sort("_id", DESCENDING)
+        all_products_records = production_collection.find().sort("_id", ASCENDING)
 
     except Exception as e:
         raise Exception(str(e))
@@ -72,7 +72,7 @@ def resolve_get_all_payment_records(_, info):
     all_payment_records = None
 
     try:
-        all_payment_records = payment_collection.find().sort("_id", DESCENDING)
+        all_payment_records = payment_collection.find().sort("_id", ASCENDING)
 
     except Exception as e:
         raise Exception(str(e))
@@ -100,7 +100,7 @@ def resolve_get_all_customer_records(_, info):
     all_customer_records = None
 
     try:
-        all_customer_records = customers_collection.find().sort("_id", DESCENDING)
+        all_customer_records = customers_collection.find().sort("_id", ASCENDING)
 
     except Exception as e:
         raise Exception(str(e))
@@ -128,7 +128,7 @@ def resolve_get_all_expense_records(_, info):
     all_expense_records = None
 
     try:
-        all_expense_records = expenses_collection.find().sort("_id", DESCENDING)
+        all_expense_records = expenses_collection.find().sort("_id", ASCENDING)
 
     except Exception as e:
         raise Exception(str(e))
