@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
-from pymongo import MongoClient
 from bson.objectid import ObjectId
 from app.decorators import is_authenticated
+from pymongo import MongoClient, ASCENDING, DESCENDING
 
 load_dotenv()
 
@@ -44,7 +44,7 @@ def resolve_get_all_production_records(_, info):
     all_products_records = None
 
     try:
-        all_products_records = production_collection.find()
+        all_products_records = production_collection.find().sort("_id", DESCENDING)
 
     except Exception as e:
         raise Exception(str(e))
@@ -72,7 +72,7 @@ def resolve_get_all_payment_records(_, info):
     all_payment_records = None
 
     try:
-        all_payment_records = payment_collection.find()
+        all_payment_records = payment_collection.find().sort("_id", DESCENDING)
 
     except Exception as e:
         raise Exception(str(e))
@@ -100,7 +100,7 @@ def resolve_get_all_customer_records(_, info):
     all_customer_records = None
 
     try:
-        all_customer_records = customers_collection.find()
+        all_customer_records = customers_collection.find().sort("_id", DESCENDING)
 
     except Exception as e:
         raise Exception(str(e))
@@ -128,7 +128,7 @@ def resolve_get_all_expense_records(_, info):
     all_expense_records = None
 
     try:
-        all_expense_records = expenses_collection.find()
+        all_expense_records = expenses_collection.find().sort("_id", DESCENDING)
 
     except Exception as e:
         raise Exception(str(e))
