@@ -154,6 +154,27 @@ def resolve_get_expense_record(_, info, id: str):
 
 
 @is_authenticated
+def resolve_get_all_auto_reports_records(_, info):
+    all_report_records = None
+    record_list = []
+
+    try:
+        all_report_records = auto_report_collection.find().sort("_id", ASCENDING)
+
+    except Exception as e:
+        raise Exception(str(e))
+
+    finally:
+        if all_report_records:
+            for report_record in all_report_records:
+                report_record["_id"] = str(report_record["_id"])
+
+                record_list.append(report_record)
+
+        return record_list
+
+
+@is_authenticated
 def resolve_get_auto_reports_record(_, info, id: str):
     report_record = None
 

@@ -76,6 +76,8 @@ class AutoReport:
         return data
 
     def get_report_data(self, production: list, payment: list, expenses: list) -> dict:
+        production_len = 0
+
         total_milk_production = 0
         total_expected_earnings = 0
 
@@ -107,6 +109,8 @@ class AutoReport:
 
                 total_milk_production += total
                 total_expected_earnings += earnings
+
+                production_len += 1
 
         if payment:
             for earnings in payment:
@@ -140,10 +144,14 @@ class AutoReport:
                     shipping_expenses += 1
 
         return {
-            "total_milk_production": total_milk_production,
+            "production": {
+                "total_milk_production": total_milk_production,
+                "average_milk_production": total_milk_production / production_len,
+            },
             "payment": {
-                "total_earnings": total_earnings,
-                "total_expected_earnings": total_expected_earnings,
+                "gross_earnings": total_earnings,
+                "expected_gross_earnings": total_expected_earnings,
+                "net_earnings": total_earnings - total_expenses,
                 "payment_methods_stats": {
                     "mpesa_count": mpesa_count,
                     "cash_count": cash_count,

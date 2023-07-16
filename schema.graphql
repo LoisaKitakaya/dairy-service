@@ -70,6 +70,7 @@ type Query {
   get_expense_record(id: ID!): expenses!
 
   get_auto_reports_record(id: ID!): Report!
+  get_all_auto_reports_records: [Report!]!
 }
 
 type Mutation {

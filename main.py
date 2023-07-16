@@ -104,6 +104,7 @@ query.set_field("get_all_expense_records", resolve_get_all_expense_records)
 query.set_field("get_expense_record", resolve_get_expense_record)
 
 query.set_field("get_auto_reports_record", resolve_get_auto_reports_record)
+query.set_field("get_all_auto_reports_records", resolve_get_all_auto_reports_records)
 
 # app mutations
 
