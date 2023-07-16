@@ -170,7 +170,7 @@ class AutoReport:
         new_data = {
             "created_on": datetime_obj.timestamp(),
             "updated_on": datetime_obj.timestamp(),
-            "title": f"Weekly report - {end.date()} to {start.date()}",
+            "title": f"Weekly report - {str(end.date())} to {str(start.date())}",
         }
 
         report_data.update(new_data)
