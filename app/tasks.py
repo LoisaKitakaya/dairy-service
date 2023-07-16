@@ -25,8 +25,18 @@ report generation function
 """
 
 
-def generate_report(start_date: datetime, end_date: datetime):
-    report_gen = AutoReport(start_date, end_date)
+def generate_report(start_date, end_date):
+    report_obj = AutoReport(start_date, end_date)
+
+    last_week_data = report_obj.fetch_data()
+
+    production = last_week_data["production"]
+    payment = last_week_data["payment"]
+    expenses = last_week_data["expenses"]
+
+    report_data = report_obj.get_report_data(production, payment, expenses)  # type: ignore
+
+    return report_obj.save_report(report_data)
 
 
 """
@@ -67,7 +77,7 @@ def weekly_update():
 
         tag = soup.find("a")
 
-        tag["href"] = f"/app/{WEB_APP}/reports/auto/{end.date()}to{start.date()}"  # type: ignore
+        tag["href"] = f"{WEB_APP}/app/reports/auto/{report.inserted_id}"  # type: ignore
 
         soup.smooth()
 
@@ -105,4 +115,4 @@ def weekly_update():
 
             server.sendmail(SENDER_EMAIL, RECIPIENTS, message.as_string())  # type: ignore
 
-        return
+    return
