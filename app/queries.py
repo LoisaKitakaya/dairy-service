@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from bson.objectid import ObjectId
 from app.decorators import is_authenticated
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import MongoClient, ASCENDING
 
 load_dotenv()
 
@@ -23,6 +23,8 @@ customers_collection = db.milk_customers
 expenses_collection = db.production_expenses
 
 users_collection = db.app_users
+
+auto_report_collection = db.auto_gen_reports
 
 
 @is_authenticated
@@ -149,3 +151,20 @@ def resolve_get_expense_record(_, info, id: str):
 
     finally:
         return expense_record
+
+
+@is_authenticated
+def resolve_get_auto_reports_record(_, info, id: str):
+    report_record = None
+
+    try:
+        report_record = auto_report_collection.find_one({"_id": ObjectId(id)})
+
+    except Exception as e:
+        raise Exception(str(e))
+
+    finally:
+        if report_record:
+            report_record["_id"] = str(report_record["_id"])
+
+        return report_record

@@ -1,6 +1,7 @@
 scalar OTP
 scalar Token
 scalar Password
+scalar Report
 
 type users {
   _id: ID!
@@ -67,6 +68,8 @@ type Query {
   get_customer_record(id: ID!): customer!
   get_all_expense_records: [expenses!]!
   get_expense_record(id: ID!): expenses!
+
+  get_auto_reports_record(id: ID!): Report!
 }
 
 type Mutation {

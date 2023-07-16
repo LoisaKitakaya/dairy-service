@@ -67,6 +67,7 @@ mutation = MutationType()
 otp_scalar = ScalarType("OTP")
 token_scalar = ScalarType("Token")
 password_scalar = ScalarType("Password")
+report_scalar = ScalarType("Report")
 
 
 @otp_scalar.serializer
@@ -84,6 +85,11 @@ def serialize_password(value):
     return value
 
 
+@report_scalar.serializer
+def serialize_report(value):
+    return value
+
+
 # app queries
 
 query.set_field("get_all_users", resolve_get_all_users)
@@ -96,6 +102,8 @@ query.set_field("get_all_customer_records", resolve_get_all_customer_records)
 query.set_field("get_customer_record", resolve_get_customer_record)
 query.set_field("get_all_expense_records", resolve_get_all_expense_records)
 query.set_field("get_expense_record", resolve_get_expense_record)
+
+query.set_field("get_auto_reports_record", resolve_get_auto_reports_record)
 
 # app mutations
 
@@ -119,7 +127,7 @@ mutation.set_field("delete_expense_record", resolve_delete_expense_record)
 
 schema = make_executable_schema(
     type_defs,
-    [query, mutation, otp_scalar, token_scalar, password_scalar],
+    [query, mutation, otp_scalar, token_scalar, password_scalar, report_scalar],
 )
 
 
