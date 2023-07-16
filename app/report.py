@@ -190,9 +190,3 @@ class AutoReport:
 
         else:
             raise Exception("Write operation failed.")
-
-
-class GenerateReport:
-    def __init__(self, start_date: datetime, end_date: datetime) -> None:
-        self.start_date = start_date
-        self.end_date = end_date
