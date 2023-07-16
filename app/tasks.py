@@ -25,7 +25,7 @@ report generation function
 """
 
 
-def generate_report(start_date, end_date):
+def generate_report(start_date: datetime, end_date: datetime):
     report_obj = AutoReport(start_date, end_date)
 
     last_week_data = report_obj.fetch_data()
@@ -36,7 +36,7 @@ def generate_report(start_date, end_date):
 
     report_data = report_obj.get_report_data(production, payment, expenses)  # type: ignore
 
-    return report_obj.save_report(report_data)
+    return report_obj.save_report(report_data, start_date, end_date)
 
 
 """

@@ -164,12 +164,13 @@ class AutoReport:
             },
         }
 
-    def save_report(self, report_data: dict):
+    def save_report(self, report_data: dict, start: datetime, end: datetime):
         datetime_obj = my_timezone.localize(datetime.now())
 
         new_data = {
             "created_on": datetime_obj.timestamp(),
             "updated_on": datetime_obj.timestamp(),
+            "title": f"Weekly report - {end.date()} to {start.date()}",
         }
 
         report_data.update(new_data)
