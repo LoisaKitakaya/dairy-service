@@ -1,9 +1,6 @@
 import pytest
 from .schema import *
 from main import app as flask_app
-from app.report import my_timezone
-from app.tasks import generate_report
-from datetime import datetime, timedelta
 from .config import delete_database, check_database_exists
 
 if check_database_exists("dairy_db"):
