@@ -22,8 +22,8 @@ authenticate_user = gql(
 
 request_reset = gql(
     """
-    mutation request_reset($email: String!) {
-        request_reset(email: $email)
+    mutation request_reset($email: String!, $testing: Boolean) {
+        request_reset(email: $email, testing: $testing)
     }
     """
 )
