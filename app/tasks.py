@@ -45,7 +45,7 @@ email settings
 
 SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 SENDER_EMAIL_PASSWORD = os.getenv("SENDER_EMAIL_PASSWORD")
-RECIPIENTS = ("kitakayaloisa@gmail.com", "loisadevmode@gmail.com")
+RECIPIENTS = ("risloisa@gmail.com", "kitloisa@gmail.com", "loisadevmode@gmail.com")
 
 
 """
