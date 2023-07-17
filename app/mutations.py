@@ -44,6 +44,8 @@ expenses_collection = db.production_expenses
 
 users_collection = db.app_users
 
+auto_report_collection = db.auto_gen_reports
+
 
 """
 timezone and datetime settings
@@ -713,6 +715,18 @@ def resolve_update_expense_record(
 @check_permission
 def resolve_delete_expense_record(_, info, id: str) -> bool:
     delete = expenses_collection.delete_one({"_id": ObjectId(id)})
+
+    if delete.deleted_count == 1:
+        return True
+
+    else:
+        raise Exception("Write operation failed.")
+    
+
+@is_authenticated
+@check_permission
+def resolve_delete_auto_reports_record(_, info, id: str) -> bool:
+    delete = auto_report_collection.delete_one({"_id": ObjectId(id)})
 
     if delete.deleted_count == 1:
         return True

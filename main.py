@@ -102,7 +102,6 @@ query.set_field("get_all_customer_records", resolve_get_all_customer_records)
 query.set_field("get_customer_record", resolve_get_customer_record)
 query.set_field("get_all_expense_records", resolve_get_all_expense_records)
 query.set_field("get_expense_record", resolve_get_expense_record)
-
 query.set_field("get_auto_reports_record", resolve_get_auto_reports_record)
 query.set_field("get_all_auto_reports_records", resolve_get_all_auto_reports_records)
 
@@ -125,6 +124,7 @@ mutation.set_field("delete_customer_record", resolve_delete_customer_record)
 mutation.set_field("create_expense_record", resolve_create_expense_record)
 mutation.set_field("update_expense_record", resolve_update_expense_record)
 mutation.set_field("delete_expense_record", resolve_delete_expense_record)
+mutation.set_field("delete_auto_reports_record", resolve_delete_auto_reports_record)
 
 schema = make_executable_schema(
     type_defs,

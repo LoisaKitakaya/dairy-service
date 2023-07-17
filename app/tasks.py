@@ -77,7 +77,7 @@ def weekly_update():
 
         tag = soup.find("a")
 
-        tag["href"] = f"{WEB_APP}/auto/reports/{report.inserted_id}"  # type: ignore
+        tag["href"] = f"{WEB_APP}/app/reports/{report.inserted_id}"  # type: ignore
 
         soup.smooth()
 

@@ -82,7 +82,6 @@ class AutoReport:
         total_expected_earnings = 0
 
         total_earnings = 0
-
         total_expenses = 0
 
         mpesa_count = 0
