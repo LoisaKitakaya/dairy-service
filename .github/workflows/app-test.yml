@@ -27,6 +27,7 @@ jobs:
 
     env:
       WEB_APP: ${{ secrets.WEB_APP }}
+      FREE_PASS: ${{ secrets.FREE_PASS }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
       DATABASE_URI: ${{ secrets.DATABASE_URI }}
