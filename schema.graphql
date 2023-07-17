@@ -1,0 +1,144 @@
+scalar OTP
+scalar Token
+scalar Password
+scalar Report
+
+type users {
+  _id: ID!
+  username: String!
+  email: String!
+  status: String!
+  permission: String!
+  date_joined: String!
+  created_on: Float!
+  updated_on: Float!
+}
+
+type production {
+  _id: ID!
+  name: String!
+  morning_production: Float!
+  afternoon_production: Float!
+  evening_production: Float!
+  production_date: Float!
+  created_on: Float!
+  updated_on: Float!
+}
+
+type payment {
+  _id: ID!
+  name: String!
+  amount: Float!
+  payment_method: String!
+  quantity: Float!
+  payment_date: Float!
+  created_on: Float!
+  updated_on: Float!
+}
+
+type customer {
+  _id: ID!
+  name: String!
+  priority: String!
+  phone: String!
+  trip: String!
+  package: Float!
+  created_on: Float!
+  updated_on: Float!
+}
+
+type expenses {
+  _id: ID!
+  item: String!
+  category: String!
+  amount: Float!
+  date_of_action: Float!
+  created_on: Float!
+  updated_on: Float!
+}
+
+type Query {
+  get_all_users: [users!]!
+
+  get_all_production_records: [production!]!
+  get_production_record(id: ID!): production!
+  get_all_payment_records: [payment!]!
+  get_payment_record(id: ID!): payment!
+  get_all_customer_records: [customer!]!
+  get_customer_record(id: ID!): customer!
+  get_all_expense_records: [expenses!]!
+  get_expense_record(id: ID!): expenses!
+  get_auto_reports_record(id: ID!): Report!
+  get_all_auto_reports_records: [Report!]!
+}
+
+type Mutation {
+  create_user(username: String!, email: String!, password: String!): Boolean!
+  authenticate_user(username: String!, password: String!): Token!
+  request_reset(email: String!, testing: Boolean): OTP!
+  password_reset(email: String!, new_password: String!): Password!
+
+  create_production_record(
+    name: String!
+    morning_production: String!
+    afternoon_production: String!
+    evening_production: String!
+    production_date: String!
+  ): Boolean!
+  update_production_record(
+    id: ID!
+    name: String!
+    morning_production: String!
+    afternoon_production: String!
+    evening_production: String!
+    production_date: String!
+  ): Boolean!
+  delete_production_record(id: ID!): Boolean!
+  create_payment_record(
+    name: String!
+    amount: String!
+    payment_method: String!
+    quantity: String!
+    payment_date: String!
+  ): Boolean!
+  update_payment_record(
+    id: ID!
+    name: String!
+    amount: String!
+    payment_method: String!
+    quantity: String!
+    payment_date: String!
+  ): Boolean!
+  delete_payment_record(id: ID!): Boolean!
+  create_customer_record(
+    name: String!
+    priority: String!
+    phone: String!
+    trip: String!
+    package: String!
+  ): Boolean!
+  update_customer_record(
+    id: ID!
+    name: String!
+    priority: String!
+    phone: String!
+    trip: String!
+    package: String!
+  ): Boolean!
+  delete_customer_record(id: ID!): Boolean!
+  create_expense_record(
+    item: String!
+    category: String!
+    amount: String!
+    date_of_action: String!
+  ): Boolean!
+  update_expense_record(
+    id: ID!
+    item: String!
+    category: String!
+    amount: String!
+    date_of_action: String!
+  ): Boolean!
+  delete_expense_record(id: ID!): Boolean!
+  delete_auto_reports_record(id: ID!): Boolean!
+}

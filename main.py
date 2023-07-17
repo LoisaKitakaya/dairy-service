@@ -1,323 +1,40 @@
 import os
 import time
-import psycopg2
 import schedule
 import threading
-from pytz import timezone
+from flask import Response
 from flask_cors import CORS
-from datetime import datetime
-from twilio.rest import Client
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from app.bot import TelegramBot
+from flask import Flask, jsonify, request
+from ariadne.explorer import ExplorerGraphiQL
+from ariadne import (
+    QueryType,
+    ScalarType,
+    MutationType,
+    graphql_sync,
+    load_schema_from_path,
+    make_executable_schema,
+)
 
 load_dotenv()
 
-my_timezone = timezone("Africa/Nairobi")
+WEB_APP = os.getenv("WEB_APP")
+BOT = os.getenv("TELEGRAM_TOKEN")
 
-account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-sender = os.getenv("TWILIO_SENDER")
-receiver_one = os.getenv("TWILIO_RECEIVER_ONE")
 
-web_app = os.getenv("WEB_APP")
+"""
+Scheduled operations
+"""
 
-
-def db_connect():
-    return psycopg2.connect(
-        database=os.getenv("DATABASE_NAME"),
-        user=os.getenv("DATABASE_USER"),
-        host=os.getenv("DATABASE_HOST"),
-        password=os.getenv("DATABASE_PASSWORD"),
-        port=os.getenv("DATABASE_PORT"),
-    )
-
-
-def daily_update(testing: bool = False):
-    conn = None
-
-    records = None
-
-    recipients = [receiver_one]
-
-    date_obj = my_timezone.localize(datetime.today())
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute(
-            f"SELECT * FROM milk_production WHERE production_date = '{date_obj.date()}';"
-        )
-
-        records = cur.fetchall()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    if not testing:
-        client = Client(account_sid, auth_token)
-
-        if records:
-            for recipient in recipients:
-                client.messages.create(
-                    from_=sender,
-                    body=f"Check webapp for updates on records for date '{date_obj.date()}'. \nLink: {web_app}/date/{date_obj.date()}",
-                    to=recipient,  # type: ignore
-                )
-
-        else:
-            for recipient in recipients:
-                client.messages.create(
-                    from_=sender,
-                    body=f"No records were found for date '{date_obj.date()}'.",
-                    to=recipient,  # type: ignore
-                )
-
-        return recipients
-
-    else:
-        return True
-
-
-def make_timestamp(date_sr: str):
-    date_obj = my_timezone.localize(datetime.strptime(date_sr, "%Y-%m-%d"))
-
-    return date_obj.timestamp()
-
-
-app = Flask(__name__)
-
-
-CORS(app, resources={r"/*": {"origins": web_app}})
-
-
-@app.route("/check_connection/")
-def check_connection():
-    conn = None
-
-    db_version = None
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute("SELECT version()")
-
-        db_version = cur.fetchone()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    if db_version:
-        return jsonify({"data": {"message": f"Connection successful."}})
-    else:
-        return jsonify({"data": {"message": "Connection failed."}})
-
-
-@app.route("/view_all_records/")
-def view_all_records():
-    conn = None
-
-    records = None
-
-    formatted_records = []
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute("SELECT * FROM milk_production;")
-
-        records = cur.fetchall()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    if records:
-        for record in records:
-            new_record = {
-                "id": record[0],
-                "name": record[1],
-                "morning_production": record[2],
-                "afternoon_production": record[3],
-                "evening_production": record[4],
-                "production_unit": record[5],
-                "production_date": make_timestamp(str(record[6])),
-            }
-
-            formatted_records.append(new_record)
-
-        return jsonify(
-            {
-                "data": {
-                    "message": f"{len(records)} record(s) found in table 'milk_production'.",
-                    "records": list(record for record in formatted_records),
-                }
-            }
-        )
-
-    else:
-        return jsonify(
-            {
-                "data": {
-                    "message": "0 record(s) in table 'milk_production'.",
-                    "records": [],
-                }
-            }
-        )
-
-
-@app.route("/view_record/<name>/")
-def view_record(name):
-    conn = None
-
-    records = None
-
-    formatted_records = []
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute(f"SELECT * FROM milk_production WHERE animal = '{name}';")
-
-        records = cur.fetchall()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    if records:
-        for record in records:
-            new_record = {
-                "id": record[0],
-                "name": record[1],
-                "morning_production": record[2],
-                "afternoon_production": record[3],
-                "evening_production": record[4],
-                "production_unit": record[5],
-                "production_date": make_timestamp(str(record[6])),
-            }
-
-            formatted_records.append(new_record)
-
-        return jsonify(
-            {
-                "data": {
-                    "message": f"{len(records)} record(s) of '{name}' found in table 'milk_production'.",
-                    "records": list(record for record in formatted_records),
-                }
-            }
-        )
-
-    else:
-        return jsonify(
-            {
-                "data": {
-                    "message": f"0 record(s) of '{name}' found in table 'milk_production'.",
-                    "records": [],
-                }
-            }
-        )
-
-
-@app.route("/view_record_by_date/<date>/")
-def view_record_by_date(date):
-    conn = None
-
-    records = None
-
-    formatted_records = []
-
-    date_obj = my_timezone.localize(datetime.strptime(date, "%Y-%m-%d"))
-
-    try:
-        conn = db_connect()
-
-        cur = conn.cursor()
-
-        cur.execute(
-            f"SELECT * FROM milk_production WHERE production_date = '{date_obj.date()}';"
-        )
-
-        records = cur.fetchall()
-
-        cur.close()
-
-    except Exception as error:
-        raise Exception(str(error))
-
-    finally:
-        if conn is not None:
-            conn.close()
-
-    if records:
-        for record in records:
-            new_record = {
-                "id": record[0],
-                "name": record[1],
-                "morning_production": record[2],
-                "afternoon_production": record[3],
-                "evening_production": record[4],
-                "production_unit": record[5],
-                "production_date": make_timestamp(str(record[6])),
-            }
-
-            formatted_records.append(new_record)
-
-        return jsonify(
-            {
-                "data": {
-                    "message": f"{len(records)} record(s) from date '{date}' found in table 'milk_production'.",
-                    "records": list(record for record in formatted_records),
-                }
-            }
-        )
-
-    else:
-        return jsonify(
-            {
-                "data": {
-                    "message": f"0 record(s) from date '{date}' found in table 'milk_production'.",
-                    "records": [],
-                }
-            }
-        )
-
+from app.tasks import weekly_update
 
 task_lock = threading.Lock()
 
 
 def schedule_task():
     with task_lock:
-        schedule.every().day.at("20:00", "Africa/Nairobi").do(daily_update)
+        schedule.every().monday.at("07:00", "Africa/Nairobi").do(weekly_update)
 
 
 schedule_task()
@@ -331,6 +48,182 @@ def run_scheduled_tasks():
 
 schedule_thread = threading.Thread(target=run_scheduled_tasks, daemon=True)
 schedule_thread.start()
+
+
+"""
+GraphQl api setup
+"""
+
+from app.queries import *
+from app.mutations import *
+
+type_defs = load_schema_from_path("schema.graphql")
+
+query = QueryType()
+mutation = MutationType()
+
+# custom scalar type
+
+otp_scalar = ScalarType("OTP")
+token_scalar = ScalarType("Token")
+password_scalar = ScalarType("Password")
+report_scalar = ScalarType("Report")
+
+
+@otp_scalar.serializer
+def serialize_otp(value):
+    return value
+
+
+@token_scalar.serializer
+def serialize_token(value):
+    return value
+
+
+@password_scalar.serializer
+def serialize_password(value):
+    return value
+
+
+@report_scalar.serializer
+def serialize_report(value):
+    return value
+
+
+# app queries
+
+query.set_field("get_all_users", resolve_get_all_users)
+
+query.set_field("get_all_production_records", resolve_get_all_production_records)
+query.set_field("get_production_record", resolve_get_production_record)
+query.set_field("get_all_payment_records", resolve_get_all_payment_records)
+query.set_field("get_payment_record", resolve_get_payment_record)
+query.set_field("get_all_customer_records", resolve_get_all_customer_records)
+query.set_field("get_customer_record", resolve_get_customer_record)
+query.set_field("get_all_expense_records", resolve_get_all_expense_records)
+query.set_field("get_expense_record", resolve_get_expense_record)
+query.set_field("get_auto_reports_record", resolve_get_auto_reports_record)
+query.set_field("get_all_auto_reports_records", resolve_get_all_auto_reports_records)
+
+# app mutations
+
+mutation.set_field("create_user", resolve_create_user)
+mutation.set_field("authenticate_user", resolve_authenticate_user)
+mutation.set_field("request_reset", resolve_request_reset)
+mutation.set_field("password_reset", resolve_password_reset)
+
+mutation.set_field("create_production_record", resolve_create_production_record)
+mutation.set_field("update_production_record", resolve_update_production_record)
+mutation.set_field("delete_production_record", resolve_delete_production_record)
+mutation.set_field("create_payment_record", resolve_create_payment_record)
+mutation.set_field("update_payment_record", resolve_update_payment_record)
+mutation.set_field("delete_payment_record", resolve_delete_payment_record)
+mutation.set_field("create_customer_record", resolve_create_customer_record)
+mutation.set_field("update_customer_record", resolve_update_customer_record)
+mutation.set_field("delete_customer_record", resolve_delete_customer_record)
+mutation.set_field("create_expense_record", resolve_create_expense_record)
+mutation.set_field("update_expense_record", resolve_update_expense_record)
+mutation.set_field("delete_expense_record", resolve_delete_expense_record)
+mutation.set_field("delete_auto_reports_record", resolve_delete_auto_reports_record)
+
+schema = make_executable_schema(
+    type_defs,
+    [query, mutation, otp_scalar, token_scalar, password_scalar, report_scalar],
+)
+
+
+"""
+Main Flask application
+"""
+
+app = Flask(__name__)
+
+
+CORS(app, resources={r"/*": {"origins": WEB_APP}})
+
+explorer_html = ExplorerGraphiQL().html(None)
+
+
+"""
+GraphQL api endpoint
+"""
+
+
+@app.route("/graphql/", methods=["GET"])
+def graphql_explorer():
+    return explorer_html, 200
+
+
+@app.route("/graphql/", methods=["POST"])
+def graphql_server():
+    data = request.get_json()
+
+    success, result = graphql_sync(
+        schema, data, context_value={"request": request}, debug=app.debug
+    )
+
+    status_code = 200 if success else 400
+    return jsonify(result), status_code
+
+
+"""
+Telegram webhook
+"""
+
+
+@app.route("/telegram/", methods=["POST"])
+def telegram_server():
+    bot = TelegramBot(BOT)  # type: ignore
+
+    bot_commands = bot.list_commands
+
+    parsed_data = bot.parse_message(request.get_json())
+
+    chat_id = parsed_data["chat_id"]
+    command = parsed_data["msg"].strip("/")
+
+    command = command.split()
+
+    try:
+        if command[0] not in bot_commands:
+            reply = """
+                Entered invalid command.
+                \nType /commands to get a list of all the valid commands commands.
+            
+            """
+
+            bot.send_message(chat_id, reply)
+
+        else:
+            if command[0] == "new":
+                bot.new(chat_id, command)
+
+            elif command[0] == "update":
+                bot.update(chat_id, command)
+
+            elif command[0] == "view":
+                bot.view(chat_id, command)
+
+            elif command[0] == "delete":
+                bot.delete(chat_id, command)
+
+            elif command[0] == "permissions":
+                bot.permissions(chat_id, command)
+
+            elif command[0] == "commands":
+                bot.commands(chat_id)
+
+            elif command[0] == "start":
+                bot.start(chat_id)
+
+    except Exception as e:
+        if os.getenv("FLASK_DEBUG"):
+            print(e)
+        else:
+            pass
+
+    finally:
+        return Response("ok", 200)
 
 
 if __name__ == "__main__":

@@ -15,31 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_DB: dairy_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+      mongodb:
+        image: mongo
+        ports:
+          - 27017:27017
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 5432:5432
 
     env:
       WEB_APP: ${{ secrets.WEB_APP }}
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_USER: ${{ secrets.DATABASE_USER }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      TWILIO_SENDER: ${{ secrets.TWILIO_SENDER }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-      TWILIO_RECEIVER_ONE: ${{ secrets.TWILIO_RECEIVER_ONE }}
+      FREE_PASS: ${{ secrets.FREE_PASS }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      SENDER_EMAIL_PASSWORD: ${{ secrets.SENDER_EMAIL_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v3
@@ -60,4 +53,4 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest test.py
+          pytest tests/test.py
